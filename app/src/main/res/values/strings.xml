@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Walletka</string>
+    <string name="lsp_settings_title">Lsp settings</string>
+    <string name="lsp_min_channel_size_title">Minimal channel size</string>
+    <string name="lsp_include_onchain_fee_title">Include on-chain fee</string>
+    <string name="lsp_enable_ecash_title">Enable e-cash</string>
+    <string name="lsp_max_ecash_receive_title">Maximum e-ecash receive</string>
+    <string name="lsp_public_channels_title">Open channels as public</string>
+</resources>
