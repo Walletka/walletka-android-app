@@ -1,5 +1,7 @@
 package com.walletka.app.ui.pages.home
 
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,7 +20,11 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -32,6 +38,7 @@ import com.walletka.app.ui.components.MainFloatingActionButton
 import com.walletka.app.ui.pages.contacts.ContactsScreen
 import com.walletka.app.ui.pages.dashboard.DashboardScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -65,6 +72,23 @@ fun HomePage(
             }
         },
     )
+
+    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    var backPressHandled by remember { mutableStateOf(false) }
+    BackHandler(enabled = !backPressHandled) {
+        if (pageState.currentPage == 0) {
+            backPressHandled = true
+            scope.launch {
+                awaitFrame()
+                onBackPressedDispatcher?.onBackPressed()
+                backPressHandled = false
+            }
+        } else {
+            scope.launch {
+                pageState.animateScrollToPage(0)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {

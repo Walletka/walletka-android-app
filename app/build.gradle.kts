@@ -63,7 +63,7 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
     androidTestImplementation("androidx.room:room-testing:$roomVersion")
 
-    implementation("io.github.rust-nostr:nostr-sdk:0.0.4")
+    implementation("io.github.rust-nostr:nostr-sdk:0.0.5")
 
     val retrofitVersion = "2.9.0"
     implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")

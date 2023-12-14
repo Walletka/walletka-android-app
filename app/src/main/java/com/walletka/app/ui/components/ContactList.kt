@@ -22,11 +22,12 @@ fun ContactList(
     modifier: Modifier = Modifier,
     contacts: List<ContactListItem>,
     limit: Int = Int.MAX_VALUE,
+    onItemClick: (ContactListItem) -> Unit,
     onMoreClick: () -> Unit = {}
 ) {
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
         contacts.forEach {
-            ContactListItem(contact = it)
+            ContactListItem(contact = it, onClick = { onItemClick(it) })
         }
         if (contacts.size > limit) {
             Box(contentAlignment = Alignment.Center) {

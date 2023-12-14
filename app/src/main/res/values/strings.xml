@@ -6,4 +6,5 @@
     <string name="lsp_enable_ecash_title">Enable e-cash</string>
     <string name="lsp_max_ecash_receive_title">Maximum e-ecash receive</string>
     <string name="lsp_public_channels_title">Open channels as public</string>
+    <string name="nostr_add_contact">Add contact</string>
 </resources>

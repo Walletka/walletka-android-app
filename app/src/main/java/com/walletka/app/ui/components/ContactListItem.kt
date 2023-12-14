@@ -1,5 +1,6 @@
 package com.walletka.app.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -10,17 +11,13 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.walletka.app.R
 import com.walletka.app.dto.ContactListItem
-import com.walletka.app.enums.TransactionDirection
-import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactListItem(contact: ContactListItem) {
-    Box(modifier = Modifier.fillMaxWidth()) {
+fun ContactListItem(contact: ContactListItem, onClick: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
         ListItem(headlineText = { Text(text = contact.npub) }, leadingContent = {
             Icon(Icons.Filled.AccountCircle, contentDescription = contact.npub)
         })
@@ -31,6 +28,7 @@ fun ContactListItem(contact: ContactListItem) {
 @Preview(showBackground = true)
 fun PreviewContactListItem() {
     ContactListItem(
-        "npub"
+        "npub",
+        "alias"
     )
 }
