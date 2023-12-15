@@ -72,7 +72,7 @@ fun WalletLayerActions(
                     "Send",
                     imageVector = Icons.Default.Send
                 ){
-                    navController.navigate("sendCashuToken")
+                    navController.navigate("cashu/sendToken")
                 }
                 WalletLayerActionButton(
                     "Nuts",

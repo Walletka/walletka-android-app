@@ -21,6 +21,8 @@ import com.walletka.app.ui.pages.intro.IntroPage
 import com.walletka.app.ui.pages.scanner.ScannerScreen
 import com.walletka.app.ui.pages.settings.SettingsScreen
 import com.walletka.app.ui.pages.transfers.CreateInvoiceScreen
+import com.walletka.app.ui.pages.transfers.SendCashuTokenPage
+import com.walletka.app.ui.pages.transfers.TransactionListPage
 import com.walletka.app.ui.theme.WalletkaTheme
 import com.walletka.app.usecases.StartWalletkaServicesUseCase
 import com.walletka.app.usecases.intro.GetIntroStateUseCase
@@ -79,6 +81,12 @@ class MainActivity : ComponentActivity() {
                         composable("contact/{npub}") {
                             val npub = it.arguments?.getString("npub")!!
                             ContactDetailPage(npub = npub, navController = navController)
+                        }
+                        composable("cashu/sendToken") {
+                            SendCashuTokenPage(navController = navController)
+                        }
+                        composable("transactions") {
+                            TransactionListPage(navController = navController)
                         }
                     }
                 }

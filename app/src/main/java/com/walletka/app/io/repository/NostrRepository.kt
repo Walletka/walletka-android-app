@@ -16,12 +16,14 @@ import nostr_sdk.Client
 import nostr_sdk.Contact
 import nostr_sdk.Event
 import nostr_sdk.EventBuilder
+import nostr_sdk.EventId
 import nostr_sdk.Filter
 import nostr_sdk.HandleNotification
 import nostr_sdk.Keys
 import nostr_sdk.PublicKey
 import nostr_sdk.RelayMessage
 import nostr_sdk.TagEnum
+import nostr_sdk.Timestamp
 import nostr_sdk.nip04Decrypt
 import java.time.Duration
 import javax.inject.Inject
@@ -58,12 +60,15 @@ class NostrRepository @Inject constructor(
     var contacts = mutableListOf<Contact>()
     val contactsChannel: Channel<List<Contact>> = Channel()
 
+    val messagesChannel: Channel<Pair<Event, String>> = Channel()
+
+
     fun start() {
         client.addRelay("wss://nostr.tchaicap.space")
         client.connect()
-        //listenEvents()
+        listenEvents()
         //subscribeContacts()
-        //subscribeMessages()
+        subscribeMessages()
 
         _connected = true
 
@@ -85,39 +90,54 @@ class NostrRepository @Inject constructor(
     }
 
     fun listenEvents() {
-        client.handleNotifications(object : HandleNotification {
-            override fun handle(relayUrl: String, event: Event) {
-                Log.i("NostrHandler", event.content())
-
-                if (event.kind() == 3u.toULong()) {
-                    Log.i("NostrHandler", "Handled kind 3 event!")
+        try {
+            client.handleNotifications(object : HandleNotification {
+                override fun handle(relayUrl: String, event: Event) {
+                    // todo handle events
                 }
-            }
 
-            override fun handleMsg(relayUrl: String, msg: RelayMessage) {
-                if (msg is RelayMessage.Ev) {
-                    val event = Event.fromJson(msg.event)
-                    // Decode content
-                    val decryptedMsg = nip04Decrypt(
-                        keys.secretKey(),
-                        event.pubkey(),
-                        event.content()
-                    )
-                    Log.i(TAG, "Decrypted msg: $decryptedMsg")
+                override fun handleMsg(relayUrl: String, msg: RelayMessage) {
+                    if (msg is RelayMessage.Ev) {
+                        val event = Event.fromJson(msg.event)
+                        if (event.kind() == 4u.toULong()) {
+                            // Decode content
+                            val decryptedMsg = nip04Decrypt(
+                                keys.secretKey(),
+                                event.pubkey(),
+                                event.content()
+                            )
+                            Log.i(TAG, "Decrypted msg: $decryptedMsg")
 
-                    //nip04Callback(event, decryptedMsg)
-                } else if (msg is RelayMessage.Ok) {
-                    Log.i(TAG, "Received OK event\n${msg.message}")
-                } else if (msg is RelayMessage.Notice) {
-                    Log.i(TAG, "Received some notice\n${msg.message}")
-                } else if (msg is RelayMessage.EndOfStoredEvents) {
-                    Log.i(TAG, "Received EndOfStoredEvents event\n${msg.subscriptionId}")
-                } else if (msg is RelayMessage.NegMsg) {
-                    Log.i(TAG, "Received new msg ${msg.message}")
+                            launch {
+                                messagesChannel.send(Pair(event, decryptedMsg))
+                            }
+                        } else if (event.kind() == 3u.toULong()) {
+                            handleNip02Event(event)
+                        }
+
+                    } else if (msg is RelayMessage.Ok) {
+                        Log.i(TAG, "Received OK event\n${msg.message}")
+                    } else if (msg is RelayMessage.Notice) {
+                        Log.i(TAG, "Received some notice\n${msg.message}")
+                    } else if (msg is RelayMessage.EndOfStoredEvents) {
+                        Log.i(TAG, "Received EndOfStoredEvents event\n${msg.subscriptionId}")
+                    } else if (msg is RelayMessage.NegMsg) {
+                        Log.i(TAG, "Received new msg ${msg.message}")
+                    }
                 }
-            }
 
-        })
+            })
+        } catch (e: Exception) {
+            Log.e(TAG, e.localizedMessage)
+        }
+    }
+
+    fun decodeNip04Message(msg: String): String {
+        return nip04Decrypt(
+            keys.secretKey(),
+            getPubKey(),
+            msg
+        )
     }
 
     fun getEvents(vararg filters: Filter): List<Event> {
@@ -125,12 +145,12 @@ class NostrRepository @Inject constructor(
     }
 
     fun subscribeEvents(vararg filters: Filter) {
-        client.reqEventsOf(filters.toList(), Duration.ofSeconds(50)) // Warning!! Crashing
+        client.subscribe(filters.toList()) // Warning!! Crashing
     }
 
     private fun subscribeMessages() {
         val privateMessagesFilter =
-            Filter().kind(4u).pubkey(getPubKey())
+            Filter().kind(4u).pubkey(getPubKey()).since(Timestamp.now())
 
         subscribeEvents(privateMessagesFilter)
     }
@@ -196,6 +216,18 @@ class NostrRepository @Inject constructor(
         getContactList()
     }
 
+    fun sendNip04Message(recipientNpub: String, content: String, replyTo: String? = null) {
+        val event =
+            EventBuilder.newEncryptedDirectMsg(
+                keys,
+                PublicKey.fromBech32(recipientNpub),
+                content,
+                replyTo?.let { EventId.fromBech32(it) }
+            ).toEvent(keys)
+
+        client.sendEvent(event)
+        Log.i(TAG, "Encrypted message event sent:\n${event.asJson()}")
+    }
 
     private var job: Job = Job()
     override val coroutineContext: CoroutineContext
