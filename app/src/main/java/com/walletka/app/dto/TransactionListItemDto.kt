@@ -3,7 +3,7 @@ package com.walletka.app.dto
 import com.walletka.app.enums.TransactionDirection
 import java.time.LocalDateTime
 
-data class TransactionListItem (
+data class TransactionListItemDto (
     val direction: TransactionDirection,
     val amount: ULong,
     val primaryText: String,

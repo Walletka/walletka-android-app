@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.walletka.app.R
-import com.walletka.app.dto.TransactionListItem
+import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -21,19 +21,19 @@ import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionListItem(transaction: TransactionListItem) {
+fun TransactionListItem(transaction: TransactionListItemDto) {
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
 
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            headlineText = {
+            headlineContent = {
                 Text(
                     text = transaction.primaryText
                 )
             },
-            supportingText = {
+            supportingContent = {
                 Text(
                     transaction.time.format(
                         DateTimeFormatter.ofLocalizedDateTime(
@@ -67,7 +67,7 @@ fun TransactionListItem(transaction: TransactionListItem) {
 @Preview(showBackground = true)
 fun PreviewTransactionListItem() {
     TransactionListItem(
-        TransactionListItem(
+        TransactionListItemDto(
             TransactionDirection.Received,
             100_000u,
             "Sender",

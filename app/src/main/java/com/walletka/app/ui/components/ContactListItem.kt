@@ -18,7 +18,7 @@ import com.walletka.app.dto.ContactListItem
 @Composable
 fun ContactListItem(contact: ContactListItem, onClick: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
-        ListItem(headlineText = { Text(text = contact.npub) }, leadingContent = {
+        ListItem(headlineContent = { Text(text = contact.npub) }, leadingContent = {
             Icon(Icons.Filled.AccountCircle, contentDescription = contact.npub)
         })
     }

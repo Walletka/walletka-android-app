@@ -10,22 +10,19 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.walletka.app.dto.TransactionListItem
+import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
 import java.time.LocalDateTime
 
 @Composable
 fun TransactionList(
-    transactions: List<TransactionListItem>,
+    transactions: List<TransactionListItemDto>,
     limit: Int = Int.MAX_VALUE,
     onMoreClick: () -> Unit = {}
 ) {
@@ -52,28 +49,28 @@ fun TransactionList(
 @Composable
 fun TransactionsListPreview() {
     val transactions = listOf(
-        TransactionListItem(
+        TransactionListItemDto(
             TransactionDirection.Received,
             100_000u,
             "Sender",
             "address",
             LocalDateTime.now()
         ),
-        TransactionListItem(
+        TransactionListItemDto(
             TransactionDirection.Sent,
             100u,
             "Receiver",
             "address",
             LocalDateTime.now()
         ),
-        TransactionListItem(
+        TransactionListItemDto(
             TransactionDirection.Sent,
             100u,
             "Receiver",
             "address",
             LocalDateTime.now()
         ),
-        TransactionListItem(
+        TransactionListItemDto(
             TransactionDirection.Sent,
             100u,
             "Receiver",

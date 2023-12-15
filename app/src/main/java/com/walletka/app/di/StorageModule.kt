@@ -2,6 +2,7 @@ package com.walletka.app.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.walletka.app.io.database.WalletkaDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,5 +21,10 @@ class SharedPreferencesModule {
     @Provides
     fun provideSharedPreference(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("walletka", Context.MODE_PRIVATE)
+    }
+
+    @Provides
+    fun provideWalletkaDatabase(@ApplicationContext context: Context): WalletkaDatabase {
+        return WalletkaDatabase.getDatabase(context)
     }
 }
