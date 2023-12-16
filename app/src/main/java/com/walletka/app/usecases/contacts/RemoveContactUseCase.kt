@@ -1,12 +1,12 @@
 package com.walletka.app.usecases.contacts
 
-import com.walletka.app.io.repository.NostrRepository
+import com.walletka.app.io.client.NostrClient
 import javax.inject.Inject
 
 class RemoveContactUseCase @Inject constructor(
-    private val nostrRepository: NostrRepository
+    private val nostrClient: NostrClient
 ) {
     operator fun invoke(npub: String) {
-        nostrRepository.removeContact(npub)
+        nostrClient.removeContact(npub)
     }
 }

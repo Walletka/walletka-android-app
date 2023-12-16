@@ -17,23 +17,15 @@ class GetTransactionsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(params: Params): kotlinx.coroutines.flow.Flow<List<TransactionListItemDto>> {
-        return flow {
-            if (params.cashu) {
-                while (true) {
-                    val parsed =
-                        cashuWallet.getAllTransactions().sortedByDescending { it.timestamp }
-                            .map { tx ->
-                                TransactionListItemDto(
-                                    if (tx.sent) TransactionDirection.Sent else TransactionDirection.Received,
-                                    tx.amount.toULong(),
-                                    tx.memo ?: "Subject",
-                                    "",
-                                    LocalDateTime.ofEpochSecond(tx.timestamp, 0, ZoneOffset.UTC)
-                                )
-                            }
-                    emit(parsed)
-                    delay(1000)
-                }
+        return cashuWallet.transactionsFlow.map {
+            it.sortedByDescending { it.timestamp }.map { tx ->
+                TransactionListItemDto(
+                    if (tx.sent) TransactionDirection.Sent else TransactionDirection.Received,
+                    tx.amount.toULong(),
+                    tx.memo ?: "Subject",
+                    "",
+                    LocalDateTime.ofEpochSecond(tx.timestamp, 0, ZoneOffset.UTC)
+                )
             }
         }
     }

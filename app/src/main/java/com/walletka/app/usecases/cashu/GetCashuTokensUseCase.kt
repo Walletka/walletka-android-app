@@ -15,13 +15,8 @@ class GetCashuTokensUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(): kotlinx.coroutines.flow.Flow<Map<String, List<CashuTokenEntity>>> {
-        return flow {
-            while (true) {
-                val res = cashuWallet.getAllTokens().groupBy { it.mintUrl }.toMap()
-                emit(res)
-
-                delay(1000)
-            }
+        return cashuWallet.tokensFlow.map {
+            it.groupBy { it.mintUrl }.toMap()
         }
     }
 }

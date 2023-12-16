@@ -201,7 +201,10 @@ fun SendCashuTokenForm(
                                     Text(
                                         text = "${bank.key} - ${bank.value.toLong()} sats"
                                     )
-                                }, onClick = { viewModel.selectedMint = bank.key })
+                                }, onClick = {
+                                    viewModel.selectedMint = bank.key
+                                    banksExpanded = false
+                                })
                             }
                         }
                     }

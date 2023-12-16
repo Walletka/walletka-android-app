@@ -2,36 +2,40 @@ package com.walletka.app.usecases.contacts
 
 import android.util.Log
 import com.walletka.app.dto.ContactListItem
-import com.walletka.app.io.repository.NostrRepository
-import com.walletka.app.ui.components.ContactListItem
-import kotlinx.coroutines.channels.consume
+import com.walletka.app.io.client.NostrClient
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import nostr_sdk.PublicKey
+import nostr_sdk.Contact
 import javax.inject.Inject
 
 class GetContactsUseCase @Inject constructor(
-    private val nostrRepository: NostrRepository
+    private val nostrClient: NostrClient
 ) {
     suspend operator fun invoke(): kotlinx.coroutines.flow.Flow<List<ContactListItem>> {
-        while (!nostrRepository.isConnected()) {
+        while (!nostrClient.isConnected()) {
             delay(100)
         }
 
         val res = flow {
 
             try {
-                emit(nostrRepository.getContactList().map { contact ->
-                    ContactListItem(contact.publicKey().toBech32(), contact.alias())
+                emit(nostrClient.getContactList().map { contact ->
+                    val metadata = nostrClient.getProfile(contact.publicKey().toBech32())
+                    ContactListItem(
+                        contact.publicKey().toBech32(),
+                        resolveUserName(contact),
+                        metadata?.getPicture()
+                    )
                 })
-                nostrRepository.contactsChannel.consumeEach {
+                nostrClient.contactsChannel.consumeEach {
                     val parsed = it.map { contact ->
-                        ContactListItem(contact.publicKey().toBech32(), contact.alias())
+                        val metadata = nostrClient.getProfile(contact.publicKey().toBech32())
+                        ContactListItem(
+                            contact.publicKey().toBech32(),
+                            resolveUserName(contact),
+                            metadata?.getPicture()
+                        )
                     }
                     emit(parsed)
                 }
@@ -42,4 +46,12 @@ class GetContactsUseCase @Inject constructor(
 
         return res
     }
+
+    private fun resolveUserName(contact: Contact): String {
+        val npub = contact.publicKey().toBech32()
+
+        val metadata = nostrClient.getProfile(npub)
+        return contact.alias() ?: metadata?.getDisplayName() ?: metadata?.getName() ?: npub
+    }
+
 }

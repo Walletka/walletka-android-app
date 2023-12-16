@@ -42,7 +42,10 @@ class SendCashuTokenViewModel @Inject constructor(
                 viewModelScope.launch(Dispatchers.Main) {
                     banks =
                         it.mapValues { tokens -> tokens.value.sumOf { proof -> proof.amount.toULong() } }
-                    selectedMint = banks.maxBy { it.value }.key
+
+                    if (selectedMint == null) {
+                        selectedMint = banks.maxBy { it.value }.key
+                    }
                 }
             }
         }

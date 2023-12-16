@@ -2,7 +2,6 @@ package com.walletka.app.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -19,11 +18,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionListItem(transaction: TransactionListItemDto) {
+fun TransactionListItem(modifier: Modifier = Modifier, transaction: TransactionListItemDto) {
     Box(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
 
         ListItem(
@@ -67,6 +65,7 @@ fun TransactionListItem(transaction: TransactionListItemDto) {
 @Preview(showBackground = true)
 fun PreviewTransactionListItem() {
     TransactionListItem(
+        Modifier,
         TransactionListItemDto(
             TransactionDirection.Received,
             100_000u,
