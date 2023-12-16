@@ -1,16 +1,13 @@
-package com.walletka.app.io.repository
+package com.walletka.app.io.client
 
 import android.content.SharedPreferences
 import android.util.Log
 import arrow.core.getOrElse
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import com.walletka.app.usecases.GetMnemonicSeedUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import nostr_sdk.Client
 import nostr_sdk.Contact
@@ -20,6 +17,7 @@ import nostr_sdk.EventId
 import nostr_sdk.Filter
 import nostr_sdk.HandleNotification
 import nostr_sdk.Keys
+import nostr_sdk.Metadata
 import nostr_sdk.PublicKey
 import nostr_sdk.RelayMessage
 import nostr_sdk.TagEnum
@@ -31,7 +29,7 @@ import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
 
 @Singleton
-class NostrRepository @Inject constructor(
+class NostrClient @Inject constructor(
     private val getMnemonicSeed: GetMnemonicSeedUseCase,
     private val sharedPreferences: SharedPreferences
 ) : CoroutineScope {
@@ -132,12 +130,17 @@ class NostrRepository @Inject constructor(
         }
     }
 
-    fun decodeNip04Message(msg: String): String {
-        return nip04Decrypt(
-            keys.secretKey(),
-            getPubKey(),
-            msg
-        )
+    fun decodeNip04Message(msg: String): String? {
+        return try {
+            nip04Decrypt(
+                keys.secretKey(),
+                getPubKey(),
+                msg
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, e.localizedMessage)
+            null
+        }
     }
 
     fun getEvents(vararg filters: Filter): List<Event> {
@@ -228,6 +231,28 @@ class NostrRepository @Inject constructor(
         client.sendEvent(event)
         Log.i(TAG, "Encrypted message event sent:\n${event.asJson()}")
     }
+
+    private fun getMetadata(npub: String): Metadata? {
+        val filter = Filter().author(PublicKey.fromBech32(npub)).kind(0u)
+        val events = getEvents(filter)
+        if (events.isEmpty())
+            return null
+
+        return Metadata.fromJson(events[0].content())
+    }
+
+    fun getProfile(npub: String): Metadata? {
+        if (!cache.containsKey(npub)) {
+            getMetadata(npub)?.let {
+
+                cache[npub] = it
+            }
+
+        }
+        return cache[npub]
+    }
+
+    private val cache: MutableMap<String, Metadata> = mutableMapOf()
 
     private var job: Job = Job()
     override val coroutineContext: CoroutineContext

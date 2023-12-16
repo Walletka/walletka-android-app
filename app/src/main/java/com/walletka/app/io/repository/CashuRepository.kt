@@ -20,6 +20,9 @@ class CashuRepository @Inject constructor(
     private val cashuTokenDao = database.cashuTokenDao()
     private val cashuTransactionsDao = database.cashuTransactionsDao()
 
+    val tokens = cashuTokenDao.getAll()
+    val transactions = cashuTransactionsDao.getAll()
+
     // By default Room runs suspend queries off the main thread, therefore, we don't need to
     // implement anything else to ensure we're not doing long running database work
     // off the main thread.

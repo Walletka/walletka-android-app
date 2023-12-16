@@ -11,14 +11,12 @@ import com.tchaika.cashu_sdk.Wallet
 import com.walletka.app.io.entity.CashuTokenEntity
 import com.walletka.app.io.entity.CashuTransactionEntity
 import com.walletka.app.io.repository.CashuRepository
-import com.walletka.app.io.repository.NostrRepository
+import com.walletka.app.io.client.NostrClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import nostr_sdk.Filter
 import nostr_sdk.Timestamp
@@ -28,7 +26,7 @@ import kotlin.coroutines.CoroutineContext
 
 @Singleton
 class CashuWallet @Inject constructor(
-    private val nostrRepository: NostrRepository,
+    private val nostrClient: NostrClient,
     private val cashuRepository: CashuRepository,
 ) : CoroutineScope {
     val TAG = "CashuWallet"
@@ -36,10 +34,12 @@ class CashuWallet @Inject constructor(
     val wallets = mutableMapOf<String, Wallet>()
 
     private val tokens: MutableList<CashuTokenEntity> = mutableListOf()
+    val tokensFlow = cashuRepository.tokens
+    val transactionsFlow = cashuRepository.transactions
 
     suspend fun start() {
-        nostrSubscribe()
         getUnreadMessagesFromNostr()
+        nostrSubscribe()
     }
 
 
@@ -55,7 +55,7 @@ class CashuWallet @Inject constructor(
     }
 
     private suspend fun nostrSubscribe() {
-        nostrRepository.messagesChannel.consumeEach {
+        nostrClient.messagesChannel.consumeEach {
             if (it.second.startsWith("cashuA")) {
                 receiveToken(it.second)
                 cashuRepository.saveLastNostrReceivedTokenTime(it.first.createdAt().asSecs())
@@ -65,16 +65,16 @@ class CashuWallet @Inject constructor(
 
     private suspend fun getUnreadMessagesFromNostr() {
         val lastSeenMessage = cashuRepository.getLastNostrReceivedTokenTime()
-        nostrRepository.getEvents(
-            Filter().kind(4u).pubkey(nostrRepository.getPubKey()).since(
+        nostrClient.getEvents(
+            Filter().kind(4u).pubkey(nostrClient.getPubKey()).since(
                 Timestamp.fromSecs(lastSeenMessage)
             )
         ).forEach {
-            val decodedMessage = nostrRepository.decodeNip04Message(it.content())
-
-            if (decodedMessage.startsWith("cashuA")) {
-                receiveToken(decodedMessage)
-                cashuRepository.saveLastNostrReceivedTokenTime(it.createdAt().asSecs())
+            nostrClient.decodeNip04Message(it.content())?.let { decodedMessage ->
+                if (decodedMessage.startsWith("cashuA")) {
+                    receiveToken(decodedMessage)
+                    cashuRepository.saveLastNostrReceivedTokenTime(it.createdAt().asSecs())
+                }
             }
         }
     }
@@ -124,7 +124,8 @@ class CashuWallet @Inject constructor(
         Log.i(TAG, "Requesting to send $amount sats")
 
         val wallet = getMintWallet(mintUrl)
-        val tokensToSpend = selectProofsToSpend(tokens.filter { it.mintUrl == mintUrl }, amount ?: ULong.MAX_VALUE)
+        val tokensToSpend =
+            selectProofsToSpend(tokens.filter { it.mintUrl == mintUrl }, amount ?: ULong.MAX_VALUE)
         var valueToSpend: ULong = 0u
         val parsedTokensToSpend = tokensToSpend.map {
             valueToSpend += it.amount.toULong()
@@ -163,7 +164,7 @@ class CashuWallet @Inject constructor(
         val token = Token(mintUrl, tokensToSend, "").asString()
         Log.i(TAG, "Sent token:\n$token")
 
-        cashuRepository.saveTransaction(true, amount.toLong())
+        cashuRepository.saveTransaction(true, sendValue.toLong())
         return token
     }
 

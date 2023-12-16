@@ -55,6 +55,7 @@ android {
 
 dependencies {
     implementation("io.arrow-kt:arrow-core:1.0.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
 
     val roomVersion = "2.6.1"

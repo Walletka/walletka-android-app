@@ -1,7 +1,9 @@
 package com.walletka.app.ui.pages.transfers
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -49,10 +51,10 @@ fun TransactionListPage(
             )
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxHeight()
+                .fillMaxSize()
         ) {
             TransactionList(transactions = viewModel.transactions)
         }

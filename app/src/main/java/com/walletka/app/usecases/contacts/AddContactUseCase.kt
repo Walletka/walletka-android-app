@@ -1,12 +1,12 @@
 package com.walletka.app.usecases.contacts
 
-import com.walletka.app.io.repository.NostrRepository
+import com.walletka.app.io.client.NostrClient
 import javax.inject.Inject
 
 class AddContactUseCase @Inject constructor(
-    private val nostrRepository: NostrRepository
+    private val nostrClient: NostrClient
 ) {
     operator fun invoke(npub: String) {
-        nostrRepository.addContact(npub)
+        nostrClient.addContact(npub)
     }
 }
