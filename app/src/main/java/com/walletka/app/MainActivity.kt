@@ -23,9 +23,11 @@ import com.walletka.app.ui.pages.home.HomePage
 import com.walletka.app.ui.pages.intro.IntroPage
 import com.walletka.app.ui.pages.scanner.ScannerScreen
 import com.walletka.app.ui.pages.settings.SettingsScreen
+import com.walletka.app.ui.pages.transfers.ClaimCashuTokenPage
 import com.walletka.app.ui.pages.transfers.CreateInvoiceScreen
 import com.walletka.app.ui.pages.transfers.PayInvoicePage
 import com.walletka.app.ui.pages.transfers.PayInvoiceResultPage
+import com.walletka.app.ui.pages.transfers.PaymentReceivedPage
 import com.walletka.app.ui.pages.transfers.SendCashuTokenPage
 import com.walletka.app.ui.pages.transfers.TransactionListPage
 import com.walletka.app.ui.pages.wallet.CashuNutsPage
@@ -122,8 +124,18 @@ class MainActivity : ComponentActivity() {
                                 message = msg
                             )
                         }
+                        composable("paymentReceived/{amount}") {
+                            val amount = it.arguments?.getString("amount")!!.toULong()
+
+                            PaymentReceivedPage(navController = navController, amount = amount)
+                        }
                         composable("cashuNuts") {
                             CashuNutsPage(navController = navController)
+                        }
+                        composable("claimCashuToken?token={token}") {
+                            val token = it.arguments?.getString("token")!!
+
+                            ClaimCashuTokenPage(navController = navController, token = token)
                         }
                         composable("info/{walletLayer}") {
                             val layer = it.arguments?.getString("walletLayer")!!

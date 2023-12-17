@@ -122,6 +122,8 @@ fun ScannerScreen(
 
                         is QrCodeResultDto.CashuToken -> {
                             Log.i("QrCodeScanner", "Found Cashu token ${it.token}")
+
+                            navigateTo(navController, "claimCashuToken?token=${it.token}")
                         }
 
                         is QrCodeResultDto.EmailAddress -> {
