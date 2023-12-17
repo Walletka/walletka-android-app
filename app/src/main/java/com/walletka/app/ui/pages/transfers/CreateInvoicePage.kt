@@ -35,7 +35,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,7 +66,12 @@ import com.lightspark.composeqr.QrCodeColors
 import com.lightspark.composeqr.QrCodeView
 import com.walletka.app.R
 import com.walletka.app.ui.AmountInputMask
+import com.walletka.app.usecases.lsp.GetMyLnUrlUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -83,6 +92,9 @@ fun CreateInvoiceScreen(
 
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+
+    val lnUrl by viewModel.lnUrl.collectAsState("")
+    val amount by viewModel.amountSat.collectAsState()
 
     Scaffold(
         topBar = {
@@ -121,7 +133,7 @@ fun CreateInvoiceScreen(
             HorizontalPager(state = pageState, beyondBoundsPageCount = 3) { tabIndex ->
                 Column {
                     when (tabIndex) {
-                        0 -> InvoiceView(invoice = "lnUrl")
+                        0 -> InvoiceView(invoice = lnUrl ?: "")
                         1 -> InvoiceView(invoice = "lightningInvoice")
                         2 -> InvoiceView(invoice = "blockchainInvoice")
                     }
@@ -134,7 +146,7 @@ fun CreateInvoiceScreen(
                         clipboardManager.setText(
                             AnnotatedString(
                                 when (pageState.currentPage) {
-                                    0 -> "lnUrl"
+                                    0 -> lnUrl ?: "Error getting lnurl"
                                     1 -> "lightningInvoice"
                                     2 -> "blockchainInvoice"
                                     else -> "Undefined"
@@ -158,7 +170,7 @@ fun CreateInvoiceScreen(
                             action = Intent.ACTION_SEND
                             putExtra(
                                 Intent.EXTRA_TEXT, when (pageState.currentPage) {
-                                    0 -> "lnUrl"
+                                    0 -> lnUrl
                                     1 -> "lightningInvoice"
                                     2 -> "blockchainInvoice"
                                     else -> "Undefined"
@@ -190,14 +202,14 @@ fun CreateInvoiceScreen(
             OutlinedTextField(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                value = "0",
+                value = amount,
                 label = { Text("Amount") },
                 trailingIcon = {
-                    Text("€")
+                    Text("sats")
                 },
                 visualTransformation = AmountInputMask(),
                 onValueChange = {
-
+                    viewModel.setAmount(it)
                 })
 
             Spacer(Modifier.height(5.dp))
@@ -205,7 +217,7 @@ fun CreateInvoiceScreen(
             OutlinedTextField(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 label = { Text("Description") },
-                value = "viewModel.description",
+                value = "",
                 onValueChange = {  })
         }
     }
@@ -260,6 +272,26 @@ fun PreviewCreateInvoiceScreen() {
 }
 
 @HiltViewModel
-class CreateInvoiceViewModel @Inject constructor(): ViewModel() {
+class CreateInvoiceViewModel @Inject constructor(
+    private val getMyLnUrl: GetMyLnUrlUseCase
+): ViewModel() {
+
+    private var _amountSat = MutableStateFlow("")
+    val amountSat = _amountSat.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    var lnUrl = amountSat.mapLatest {
+        var amount: ULong? =amountSat.value.toULongOrNull()
+
+        if (amount != null) {
+            amount *= 1000u
+        }
+
+        getMyLnUrl(amount)
+    }
+
+    fun setAmount(value: String) {
+        _amountSat.value = value
+    }
 
 }

@@ -11,10 +11,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.walletka.app.ui.pages.intro.IntroPageViewModel
 
 
 @Composable
-fun CompletedIntroScreen(alias: String, onStepCompleted: () -> Unit) {
+fun CompletedIntroScreen(
+    alias: String,
+    onStepCompleted: () -> Unit
+) {
     ConstraintLayout(Modifier.fillMaxSize()) {
         val (nextButton, content) = createRefs()
 

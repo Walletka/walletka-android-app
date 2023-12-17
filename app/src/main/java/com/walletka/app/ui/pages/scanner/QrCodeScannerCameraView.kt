@@ -22,12 +22,14 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.walletka.app.dto.QrCodeResultDto
 import com.walletka.app.usecases.AnalyzeQrCodeUseCase
+import com.walletka.app.usecases.lsp.ResolveLnUrlUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -144,7 +146,8 @@ class BarcodeCodeAnalyzer(
 
 @HiltViewModel
 class QrCodeScannerCameraViewModel @Inject constructor(
-    private val analyzeQrCode: AnalyzeQrCodeUseCase
+    private val analyzeQrCode: AnalyzeQrCodeUseCase,
+    private val resolveLnUrl: ResolveLnUrlUseCase
 ) : ViewModel() {
 
     var processing by mutableStateOf(false)
@@ -154,7 +157,23 @@ class QrCodeScannerCameraViewModel @Inject constructor(
         processing = true
         if (result == null) {
             viewModelScope.launch {
-                result = analyzeQrCode(input)
+                when (val res = analyzeQrCode(input)) {
+                    is QrCodeResultDto.Url -> {
+                        Log.i("QrScannerVM", "Found URL, probing if is LnUrl")
+                        val lnUrlRes = resolveLnUrl(res.url).orNull()
+                        if (lnUrlRes == null) {
+
+                            result = res
+                        } else {
+                            Log.i("QrScannerVM", "Found LnUrl, returning invoice")
+                            result = QrCodeResultDto.Bolt11Invoice(lnUrlRes.pr, null, null)
+                        }
+                    }
+
+                    else -> {
+                        result = res
+                    }
+                }
                 processing = false
             }
         }

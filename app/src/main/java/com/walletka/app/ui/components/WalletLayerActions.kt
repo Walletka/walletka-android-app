@@ -36,7 +36,7 @@ fun WalletLayerActions(
     Row(modifier = modifier.padding(8.dp)) {
 
         WalletLayerActionButton("Info", imageVector = Icons.Default.Info) {
-            navController.navigate("walletInfo/" + layer.name)
+            navController.navigate("info/" + layer.name)
         }
 
         WalletLayerActionButton(

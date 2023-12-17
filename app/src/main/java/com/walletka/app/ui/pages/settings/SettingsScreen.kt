@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -16,13 +17,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.walletka.app.R
 import com.walletka.app.ui.pages.settings.components.SettingsGroup
@@ -30,7 +34,10 @@ import com.walletka.app.ui.pages.settings.components.SettingsNumberItem
 import com.walletka.app.ui.pages.settings.components.SettingsSwitchItem
 import com.walletka.app.ui.pages.settings.components.SettingsTextItem
 import com.walletka.app.ui.pages.settings.components.filterNumbers
+import com.walletka.app.usecases.GetNpubUseCase
+import com.walletka.app.usecases.lsp.GetLspAliasUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 import javax.inject.Inject
@@ -69,10 +76,17 @@ fun SettingsScreen(
                     .height(220.dp)
             )
             Text(
-                text = "Alias",
+                text = viewModel.alias,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 fontSize = 30.sp
             )
+
+            viewModel.npub?.let {
+                SelectionContainer {
+                    Text(text = it)
+                }
+            }
+
 
             SettingsGroup(name = R.string.lsp_settings_title) {
                 SettingsNumberItem(
@@ -134,10 +148,24 @@ fun SettingsScreen(
 }
 
 @HiltViewModel
-class SettingsScreenViewModel @Inject constructor() : ViewModel() {
+class SettingsScreenViewModel @Inject constructor(
+    private val getLspAlias: GetLspAliasUseCase,
+    private val getNpub: GetNpubUseCase
+) : ViewModel() {
     val minChannelSizeSat = mutableStateOf("40000")
     val includeOnchainFees = mutableStateOf(false)
     val enableEcash = mutableStateOf(true)
     val maxEcashReceive = mutableStateOf("${ULong.MAX_VALUE}")
     val publicChannels = mutableStateOf(true) // todo
+    var alias by mutableStateOf("")
+    var npub: String? by mutableStateOf("")
+
+    init {
+        viewModelScope.launch {
+            alias = getLspAlias() ?: "Alias undefined"
+            npub = getNpub().orNull()
+        }
+    }
+
+
 }
