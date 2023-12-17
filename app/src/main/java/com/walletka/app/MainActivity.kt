@@ -11,11 +11,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.walletka.app.enums.IntroState
 import com.walletka.app.enums.PayInvoiceResult
+import com.walletka.app.enums.WalletLayer
 import com.walletka.app.ui.pages.contacts.ContactDetailPage
 import com.walletka.app.ui.pages.home.HomePage
 import com.walletka.app.ui.pages.intro.IntroPage
@@ -27,11 +29,15 @@ import com.walletka.app.ui.pages.transfers.PayInvoiceResultPage
 import com.walletka.app.ui.pages.transfers.SendCashuTokenPage
 import com.walletka.app.ui.pages.transfers.TransactionListPage
 import com.walletka.app.ui.pages.wallet.CashuNutsPage
+import com.walletka.app.ui.pages.wallet.WalletInfoPage
 import com.walletka.app.ui.theme.WalletkaTheme
 import com.walletka.app.usecases.StartWalletkaServicesUseCase
 import com.walletka.app.usecases.intro.GetIntroStateUseCase
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -47,9 +53,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var startDestination = if (getIntroState() == IntroState.Done) "home" else "intro"
-        setContent {
-            val scope = rememberCoroutineScope()
 
+        installSplashScreen()
+
+        runBlocking {
+            if (getIntroState() == IntroState.Done) {
+                startWalletkaServices()
+            }
+        }
+
+
+        setContent {
             WalletkaTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -57,14 +71,6 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-
-                    LaunchedEffect(key1 = "start") {
-                        if (getIntroState() == IntroState.Done) {
-                            scope.launch {
-                                startWalletkaServices() // todo: run in splashcreen
-                            }
-                        }
-                    }
 
                     NavHost(navController = navController, startDestination = startDestination) {
                         composable("intro") {
@@ -118,6 +124,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("cashuNuts") {
                             CashuNutsPage(navController = navController)
+                        }
+                        composable("info/{walletLayer}") {
+                            val layer = it.arguments?.getString("walletLayer")!!
+                            val walletLayer = WalletLayer.byNameIgnoreCaseOrNull(layer)!!
+
+                            WalletInfoPage(navController = navController, layer = walletLayer)
                         }
                     }
                 }

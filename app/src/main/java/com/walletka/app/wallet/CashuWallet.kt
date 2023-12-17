@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import nostr_sdk.Filter
 import nostr_sdk.Timestamp
@@ -40,7 +41,10 @@ class CashuWallet @Inject constructor(
 
     suspend fun start() {
         getUnreadMessagesFromNostr()
-        nostrSubscribe()
+
+        launch {
+            nostrSubscribe()
+        }
     }
 
 

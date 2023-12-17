@@ -27,8 +27,10 @@ import com.walletka.app.ui.pages.intro.screens.IntroSlidesScreen
 import com.walletka.app.ui.pages.intro.screens.MnemonicIntroScreen
 import com.walletka.app.ui.pages.intro.screens.SettingsIntroScreen
 import com.walletka.app.ui.pages.intro.screens.WelcomeScreen
+import com.walletka.app.usecases.StartWalletkaServicesUseCase
 import com.walletka.app.usecases.intro.GetIntroStateUseCase
 import com.walletka.app.usecases.intro.SetIntroStateUseCase
+import com.walletka.app.usecases.lsp.GetLspAliasUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -85,12 +87,14 @@ fun IntroPage(
                         }
                     })
 
-                    IntroState.Settings -> SettingsIntroScreen {
+                    IntroState.Settings -> SettingsIntroScreen(onStepCompleted =  {
                         scope.launch {
+                            viewModel.reloadLspAlias()
                             viewModel.nextStep()
                         }
-                    }
-                    IntroState.Done -> CompletedIntroScreen(alias = viewModel.lsp_alias ?: "Unknown") {
+                    })
+                    IntroState.Done -> CompletedIntroScreen(alias = viewModel.lspAlias ?: "Unknown") {
+                        viewModel.startServices()
                         navController.navigate("home") {
                             popUpTo(0) {
                                 inclusive = true
@@ -106,11 +110,13 @@ fun IntroPage(
 @HiltViewModel
 class IntroPageViewModel @Inject constructor(
     getIntroState: GetIntroStateUseCase,
-    private val setIntroState: SetIntroStateUseCase
+    private val setIntroState: SetIntroStateUseCase,
+    private val getLspAlias: GetLspAliasUseCase,
+    private val startWalletkaServices: StartWalletkaServicesUseCase
 ) : ViewModel() {
 
     var introState by mutableStateOf(IntroState.Welcome)
-    var lsp_alias: String? by mutableStateOf(null)
+    var lspAlias: String? by mutableStateOf(null)
 
     init {
         introState = getIntroState()
@@ -123,6 +129,18 @@ class IntroPageViewModel @Inject constructor(
             viewModelScope.launch {
                 setIntroState(it)
             }
+        }
+    }
+
+    fun reloadLspAlias() {
+        viewModelScope.launch {
+            lspAlias = getLspAlias()
+        }
+    }
+
+    fun startServices() {
+        viewModelScope.launch {
+            startWalletkaServices(lspAlias)
         }
     }
 

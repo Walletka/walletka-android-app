@@ -7,5 +7,6 @@ sealed class WalletkaError(val innerMessage: String) {
 
     class CantPayInvoice(msg: String? = null) : WalletkaError(msg ?: "Can't pay invoice")
     class CantSendEncryptedMessage(msg: String? = null) : WalletkaError(msg ?: "Can't send encrypted message")
+    class CantSignupToLsp(msg: String? = null): WalletkaError(msg ?: "Can't signup to the LSP")
 }
 

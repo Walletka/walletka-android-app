@@ -1,5 +1,6 @@
 package com.walletka.app.usecases
 
+import android.util.Log
 import com.walletka.app.io.client.NostrClient
 import com.walletka.app.wallet.CashuWallet
 import javax.inject.Inject
@@ -9,9 +10,13 @@ class StartWalletkaServicesUseCase @Inject constructor(
     private val cashuWallet: CashuWallet
 ) {
 
-    suspend operator fun invoke() {
-        nostrClient.start()
+    suspend operator fun invoke(alias: String? = null) {
+        Log.i("StartWalletkaUC", "starting nostr service")
+        nostrClient.start(alias)
+        Log.i("StartWalletkaUC", "starting cashu service")
         cashuWallet.start()
+
+        Log.i("StartWalletkaUC", "Walletka services started")
     }
 
 }

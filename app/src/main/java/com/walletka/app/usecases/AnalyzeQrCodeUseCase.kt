@@ -1,5 +1,6 @@
 package com.walletka.app.usecases
 
+import android.webkit.URLUtil
 import com.walletka.app.dto.QrCodeResultDto
 import javax.inject.Inject
 
@@ -37,6 +38,10 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
 
         if (input.startsWith("npub")) {
             return QrCodeResultDto.Npub(input)
+        }
+
+        if (URLUtil.isValidUrl(input)) {
+            return QrCodeResultDto.Url(input)
         }
 
         return QrCodeResultDto.UnsupportedFormat(input)
