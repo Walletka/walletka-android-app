@@ -13,16 +13,24 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import com.walletka.app.dto.QrCodeResultDto
+import com.walletka.app.usecases.AnalyzeQrCodeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import javax.inject.Inject
 
@@ -30,8 +38,13 @@ import javax.inject.Inject
 @Composable
 fun QrCodeScannerCameraView(
     viewModel: QrCodeScannerCameraViewModel = hiltViewModel(),
-    onQrCodeFound: (String?, ULong?) -> Unit,
+    onQrCodeFound: (QrCodeResultDto?) -> Unit,
 ) {
+
+    if (viewModel.result != null) {
+        onQrCodeFound(viewModel.result)
+    }
+
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -39,6 +52,7 @@ fun QrCodeScannerCameraView(
             val previewView = PreviewView(context).also {
                 it.scaleType = PreviewView.ScaleType.FILL_CENTER
             }
+
             val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
             cameraProviderFuture.addListener({
                 val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
@@ -56,8 +70,8 @@ fun QrCodeScannerCameraView(
                     .also {
                         it.setAnalyzer(
                             cameraExecutor,
-                            BarcodeCodeAnalyzer(viewModel) { destination, amount ->
-                                onQrCodeFound(destination, amount)
+                            BarcodeCodeAnalyzer(viewModel) {
+                                onQrCodeFound(it)
                             })
                     }
 
@@ -89,14 +103,14 @@ fun QrCodeScannerCameraView(
 @Composable
 @androidx.compose.ui.tooling.preview.Preview
 fun PreviewQrCodeScannerCameraView() {
-    QrCodeScannerCameraView(hiltViewModel()) { _,_ ->
+    QrCodeScannerCameraView(hiltViewModel()) {
 
     }
 }
 
 class BarcodeCodeAnalyzer(
     val viewModel: QrCodeScannerCameraViewModel,
-    val callback: (String?, ULong?) -> Unit
+    val callback: (QrCodeResultDto) -> Unit
 ) : ImageAnalysis.Analyzer {
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
@@ -112,18 +126,10 @@ class BarcodeCodeAnalyzer(
 
             scanner.process(image)
                 .addOnSuccessListener { barcodes ->
-                    if (barcodes.size > 0) {
-                        Log.i("QrScanner", "Found WrCode ${barcodes[0]}")
-                        try {
-                            val parsed = barcodes[0].rawValue?.parseInvoice()
-                            if (parsed?.first != null) {
-                                callback(parsed.first, parsed.second)
-                                return@addOnSuccessListener
-                            }
-                        } catch (_: Exception) {
+                    if (!viewModel.processing && viewModel.result == null) {
+                        if (barcodes.size > 0) {
+                            viewModel.processInput(barcodes[0].rawValue!!)
                         }
-
-                        callback(barcodes[0].rawValue, null)
                     }
                 }
                 .addOnFailureListener {
@@ -136,51 +142,21 @@ class BarcodeCodeAnalyzer(
     }
 }
 
-// BIP21
-private fun String.parseInvoice(): Pair<String?, ULong?>? {
-    if (startsWith("ln")) {
-        return Pair(this, null)
-    }
-
-    if (this.checkIfBitcoinAddress()) {
-        return Pair(this, null)
-    }
-
-    if (startsWith("bitcoin:")) {
-        val addressEndIndex = if (this.indexOf("?") != -1) this.indexOf("?") else this.length
-        val address = this.substring(8, addressEndIndex)
-        val params = substring(indexOf("?") + 1).split("&").map {
-            val parts = it.split('=')
-            val name = parts.firstOrNull() ?: ""
-            val value = parts.drop(1).firstOrNull() ?: ""
-            Pair(name, value)
-        }
-        val lnInvoice = params.firstOrNull { it.first == "lightning" }?.second
-        val amount =
-            params.firstOrNull { it.first == "amount" }?.second?.toDouble()?.times(100000000)
-                ?.toULong()
-
-        return Pair(lnInvoice ?: address, amount)
-    }
-
-    return null
-}
-
-fun String.checkIfBitcoinAddress(): Boolean {
-    return if (startsWith("1") || startsWith("m") || startsWith("n")) {
-        true
-    } else if (startsWith("3") || startsWith("2")) {
-        true
-    } else if (startsWith("bc1") || startsWith("tb1")) {
-        if (startsWith("bc1q") || startsWith("tb1q")) {
-            true
-        } else startsWith("bc1p") || startsWith("tb1p")
-    } else {
-        false
-    }
-}
-
 @HiltViewModel
-class QrCodeScannerCameraViewModel @Inject constructor() : ViewModel() {
+class QrCodeScannerCameraViewModel @Inject constructor(
+    private val analyzeQrCode: AnalyzeQrCodeUseCase
+) : ViewModel() {
 
+    var processing by mutableStateOf(false)
+    var result: QrCodeResultDto? by mutableStateOf(null)
+
+    fun processInput(input: String) {
+        processing = true
+        if (result == null) {
+            viewModelScope.launch {
+                result = analyzeQrCode(input)
+                processing = false
+            }
+        }
+    }
 }

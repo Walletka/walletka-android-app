@@ -9,4 +9,5 @@ val Pink80 = Color(0xFFEFB8C8)
 val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
-val sampleGradientColors = listOf(Color.Blue, Color.Magenta )
+val sampleGradientColors =
+    listOf(Color.Blue, Color.Blue, Color.Magenta, Color.Magenta, Color.Magenta)

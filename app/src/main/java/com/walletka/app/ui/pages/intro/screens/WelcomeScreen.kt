@@ -10,11 +10,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.walletka.app.R
 import com.walletka.app.ui.theme.sampleGradientColors
 
 @Composable
@@ -29,7 +31,7 @@ fun WelcomeScreen(onStepCompleted: () -> Unit) {
             bottom.linkTo(nextButton.top)
         }) {
             Text(
-                "Walletka", fontSize = 80.sp, fontWeight = FontWeight.ExtraBold, style = TextStyle(
+                stringResource(R.string.app_name), fontSize = 80.sp, fontWeight = FontWeight.ExtraBold, style = TextStyle(
                     brush = Brush.linearGradient(
                         colors = sampleGradientColors,
                         tileMode = TileMode.Mirror

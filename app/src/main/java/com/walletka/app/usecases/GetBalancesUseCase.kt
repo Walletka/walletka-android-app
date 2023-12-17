@@ -1,6 +1,6 @@
 package com.walletka.app.usecases
 
-import com.walletka.app.walletka.CashuWallet
+import com.walletka.app.wallet.CashuWallet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject

@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import nostr_sdk.Client
 import nostr_sdk.Contact
 import nostr_sdk.Event
@@ -63,15 +64,18 @@ class NostrClient @Inject constructor(
 
     fun start() {
         client.addRelay("wss://nostr.tchaicap.space")
+        client.addRelay("wss://nostr.oxtr.dev")
+
         client.connect()
         listenEvents()
-        //subscribeContacts()
+
         subscribeMessages()
 
         _connected = true
 
         val initialized = sharedPreferences.getBoolean("nostr_initialized", false)
         if (!initialized) {
+
             val metadata = nostr_sdk.Metadata()
                 .setName("Walletka user")
                 .setDisplayName("Walletka user")
@@ -228,17 +232,22 @@ class NostrClient @Inject constructor(
                 replyTo?.let { EventId.fromBech32(it) }
             ).toEvent(keys)
 
-        client.sendEvent(event)
+        publishEvent(event)
         Log.i(TAG, "Encrypted message event sent:\n${event.asJson()}")
     }
 
     private fun getMetadata(npub: String): Metadata? {
-        val filter = Filter().author(PublicKey.fromBech32(npub)).kind(0u)
-        val events = getEvents(filter)
-        if (events.isEmpty())
-            return null
+        try {
+            val filter = Filter().author(PublicKey.fromBech32(npub)).kind(0u)
+            val events = getEvents(filter)
+            if (events.isEmpty())
+                return null
 
-        return Metadata.fromJson(events[0].content())
+            return Metadata.fromJson(events[0].content())
+        } catch (e: Exception) {
+            Log.e(TAG, "Can't get npub $npub metadata: ${e.localizedMessage}")
+            return null
+        }
     }
 
     fun getProfile(npub: String): Metadata? {
@@ -247,9 +256,14 @@ class NostrClient @Inject constructor(
 
                 cache[npub] = it
             }
-
         }
-        return cache[npub]
+
+        return if (cache.containsKey(npub)) cache[npub] else null
+    }
+
+    private fun publishEvent(event: Event) {
+        client.sendEvent(event)
+        client.clearAlreadySeenEvents()
     }
 
     private val cache: MutableMap<String, Metadata> = mutableMapOf()

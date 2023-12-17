@@ -46,33 +46,35 @@ fun DashboardHeader(
             Text(text = "sats", modifier = Modifier.align(Alignment.Bottom))
         }
 
-        ExposedDropdownMenuBox(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally),
-            expanded = expanded,
-            onExpandedChange = {
-                expanded = !expanded
-            }
-        ) {
-            ElevatedAssistChip(
-                onClick = { },
-                label = {
-                    Text(
-                        if (selectedLayer == WalletLayer.All) "All assets"
-                        else selectedLayer.name
-                    )
-                },
+        if (false) { // todo: only cashu
+            ExposedDropdownMenuBox(
                 modifier = Modifier
-                    .menuAnchor()
-                    .align(alignment = Alignment.CenterHorizontally),
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) })
+                    .align(Alignment.CenterHorizontally),
+                expanded = expanded,
+                onExpandedChange = {
+                    expanded = !expanded
+                }
+            ) {
+                ElevatedAssistChip(
+                    onClick = { },
+                    label = {
+                        Text(
+                            if (selectedLayer == WalletLayer.All) "All assets"
+                            else selectedLayer.name
+                        )
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .align(alignment = Alignment.CenterHorizontally),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) })
 
-            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                WalletLayer.values().forEach { layer ->
-                    DropdownMenuItem(text = { Text(layer.name) }, onClick = {
-                        onLayerSelected(layer)
-                        expanded = false
-                    })
+                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    WalletLayer.values().forEach { layer ->
+                        DropdownMenuItem(text = { Text(layer.name) }, onClick = {
+                            onLayerSelected(layer)
+                            expanded = false
+                        })
+                    }
                 }
             }
         }

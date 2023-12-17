@@ -35,7 +35,7 @@ class CashuRepository @Inject constructor(
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    suspend fun saveTransaction(sent: Boolean, amount: Long, timestamp: ULong? = null) {
+    suspend fun saveTransaction(sent: Boolean, amount: Long, timestamp: ULong? = null) = withContext(Dispatchers.IO) {
         cashuTransactionsDao.insert(
             CashuTransactionEntity(
                 0,
@@ -46,15 +46,14 @@ class CashuRepository @Inject constructor(
         )
     }
 
-    @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    suspend fun deleteAllTokens(vararg tokens: CashuTokenEntity) {
+    suspend fun deleteAllTokens(vararg tokens: CashuTokenEntity) = withContext(Dispatchers.IO) {
         cashuTokenDao.delete(*tokens)
     }
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    suspend fun saveLastNostrReceivedTokenTime(timestamp: ULong) {
+    suspend fun saveLastNostrReceivedTokenTime(timestamp: ULong) = withContext(Dispatchers.IO) {
         sharedPreferences.edit()
             .putLong("last_nostr_received_token_time", timestamp.toLong())
             .apply()
@@ -62,8 +61,8 @@ class CashuRepository @Inject constructor(
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    suspend fun getLastNostrReceivedTokenTime(): ULong {
-        return sharedPreferences.getLong("last_nostr_received_token_time", 0).toULong()
+    suspend fun getLastNostrReceivedTokenTime(): ULong = withContext(Dispatchers.IO){
+        return@withContext sharedPreferences.getLong("last_nostr_received_token_time", 0).toULong()
     }
 
     fun getAllTransactions(): List<CashuTransactionEntity> {
