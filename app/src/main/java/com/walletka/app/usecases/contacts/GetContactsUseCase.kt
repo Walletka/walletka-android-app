@@ -1,7 +1,7 @@
 package com.walletka.app.usecases.contacts
 
 import android.util.Log
-import com.walletka.app.dto.ContactListItem
+import com.walletka.app.dto.ContactListItemDto
 import com.walletka.app.io.client.NostrClient
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
@@ -12,17 +12,16 @@ import javax.inject.Inject
 class GetContactsUseCase @Inject constructor(
     private val nostrClient: NostrClient
 ) {
-    suspend operator fun invoke(): kotlinx.coroutines.flow.Flow<List<ContactListItem>> {
+    suspend operator fun invoke(): kotlinx.coroutines.flow.Flow<List<ContactListItemDto>> {
         while (!nostrClient.isConnected()) {
             delay(100)
         }
 
         val res = flow {
-
             try {
                 emit(nostrClient.getContactList().map { contact ->
                     val metadata = nostrClient.getProfile(contact.publicKey().toBech32())
-                    ContactListItem(
+                    ContactListItemDto(
                         contact.publicKey().toBech32(),
                         resolveUserName(contact),
                         metadata?.getPicture()
@@ -31,7 +30,7 @@ class GetContactsUseCase @Inject constructor(
                 nostrClient.contactsChannel.consumeEach {
                     val parsed = it.map { contact ->
                         val metadata = nostrClient.getProfile(contact.publicKey().toBech32())
-                        ContactListItem(
+                        ContactListItemDto(
                             contact.publicKey().toBech32(),
                             resolveUserName(contact),
                             metadata?.getPicture()

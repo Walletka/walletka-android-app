@@ -1,7 +1,7 @@
 package com.walletka.app.usecases
 
 import com.walletka.app.io.client.NostrClient
-import com.walletka.app.walletka.CashuWallet
+import com.walletka.app.wallet.CashuWallet
 import javax.inject.Inject
 
 class StartWalletkaServicesUseCase @Inject constructor(

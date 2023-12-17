@@ -32,6 +32,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,10 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.walletka.app.R
+import com.walletka.app.dto.QrCodeResultDto
 
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -50,8 +54,10 @@ import com.walletka.app.R
 @ExperimentalGetImage
 @Composable
 fun ScannerScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: QrCodeScannerCameraViewModel = hiltViewModel(),
 ) {
+    val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
     val permission = Manifest.permission.CAMERA
 
@@ -97,8 +103,45 @@ fun ScannerScreen(
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             }) {
-                QrCodeScannerCameraView (){ value, _ ->
-                    Log.i("QrScanner", value ?: "nothing found")
+                QrCodeScannerCameraView() {
+                    when (it) {
+                        is QrCodeResultDto.BitcoinAddress -> {
+                            Log.i("QrCodeScanner", "Found BitcoinAddress ${it.address}")
+                        }
+
+                        is QrCodeResultDto.Bolt11Invoice -> {
+                            Log.i("QrCodeScanner", "Found Bolt11 invoice ${it.bolt11Invoice}")
+                            var route = "pay?destination=" + it.bolt11Invoice
+
+                            it.amount?.let {
+                                route += "&amount=$it"
+                            }
+
+                            navigateTo(navController, route)
+                        }
+
+                        is QrCodeResultDto.CashuToken -> {
+                            Log.i("QrCodeScanner", "Found Cashu token ${it.token}")
+                        }
+
+                        is QrCodeResultDto.EmailAddress -> {
+                            Log.i("QrCodeScanner", "Found Email address ${it.emailAddress}")
+                        }
+
+                        is QrCodeResultDto.UnsupportedFormat -> {
+                            Log.i("QrCodeScanner", "Found Unknown value ${it.rawValue}")
+                        }
+
+                        is QrCodeResultDto.Url -> {
+                            Log.i("QrCodeScanner", "Found Url ${it.url}")
+                        }
+                        is QrCodeResultDto.Npub -> {
+                            Log.i("QrCodeScanner", "Found Npub ${it.npub}")
+                            navigateTo(navController, "pay?destination=${it.npub}")
+                        }
+
+                        null -> TODO()
+                    }
                 }
             }
 
@@ -115,7 +158,11 @@ fun ScannerScreen(
                 }) {
                 Column {
                     TextButton(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            clipboardManager.getText()?.let {
+                                viewModel.processInput(it.text)
+                            }
+                        },
                         Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         Row() {
@@ -146,6 +193,12 @@ fun ScannerScreen(
                 }
             }
         }
+    }
+}
+
+private fun navigateTo(navController: NavController, path: String, returnTo: String = "home") {
+    navController.navigate(path) {
+        popUpTo(returnTo)
     }
 }
 

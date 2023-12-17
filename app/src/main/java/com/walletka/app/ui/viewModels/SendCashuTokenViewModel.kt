@@ -6,10 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.walletka.app.dto.ContactListItem
-import com.walletka.app.usecases.SendEcryptedMessageUseCase
+import com.walletka.app.dto.ContactListItemDto
+import com.walletka.app.usecases.SendEncryptedMessageUseCase
 import com.walletka.app.usecases.cashu.GetCashuTokensUseCase
-import com.walletka.app.usecases.cashu.SendCashuTokenUseCase
+import com.walletka.app.usecases.cashu.CreateCashuTokenUseCase
 import com.walletka.app.usecases.contacts.GetContactsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -23,9 +23,9 @@ enum class SendCashuTokenScreenStep {
 @HiltViewModel
 class SendCashuTokenViewModel @Inject constructor(
     private val getCashuTokens: GetCashuTokensUseCase,
-    private val sendCashuToken: SendCashuTokenUseCase,
+    private val sendCashuToken: CreateCashuTokenUseCase,
     private val getContacts: GetContactsUseCase,
-    private val sendEcryptedMessage: SendEcryptedMessageUseCase
+    private val sendEncryptedMessage: SendEncryptedMessageUseCase
 ) : ViewModel() {
 
     var step by mutableStateOf(SendCashuTokenScreenStep.Form)
@@ -34,7 +34,7 @@ class SendCashuTokenViewModel @Inject constructor(
     var banks: Map<String, ULong> by mutableStateOf(mapOf())
     var selectedMint: String? by mutableStateOf(null)
     var error: String? by mutableStateOf(null)
-    var contacts = mutableStateListOf<ContactListItem>()
+    var contacts = mutableStateListOf<ContactListItemDto>()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -75,9 +75,9 @@ class SendCashuTokenViewModel @Inject constructor(
         }
     }
 
-    fun sendOverEcryptedMessage(recipientNpub: String) {
+    fun sendOverEncryptedMessage(recipientNpub: String) {
         viewModelScope.launch {
-            sendEcryptedMessage(SendEcryptedMessageUseCase.Params(
+            sendEncryptedMessage(SendEncryptedMessageUseCase.Params(
                 recipientNpub,
                 tokenToSend!!,
                 null

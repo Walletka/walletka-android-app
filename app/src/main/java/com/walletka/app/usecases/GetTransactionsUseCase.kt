@@ -2,11 +2,7 @@ package com.walletka.app.usecases
 
 import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
-import com.walletka.app.walletka.CashuWallet
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flow
+import com.walletka.app.wallet.CashuWallet
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 import java.time.ZoneOffset

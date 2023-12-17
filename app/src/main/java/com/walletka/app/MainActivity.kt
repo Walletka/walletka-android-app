@@ -15,14 +15,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.walletka.app.enums.IntroState
+import com.walletka.app.enums.PayInvoiceResult
 import com.walletka.app.ui.pages.contacts.ContactDetailPage
 import com.walletka.app.ui.pages.home.HomePage
 import com.walletka.app.ui.pages.intro.IntroPage
 import com.walletka.app.ui.pages.scanner.ScannerScreen
 import com.walletka.app.ui.pages.settings.SettingsScreen
 import com.walletka.app.ui.pages.transfers.CreateInvoiceScreen
+import com.walletka.app.ui.pages.transfers.PayInvoicePage
+import com.walletka.app.ui.pages.transfers.PayInvoiceResultPage
 import com.walletka.app.ui.pages.transfers.SendCashuTokenPage
 import com.walletka.app.ui.pages.transfers.TransactionListPage
+import com.walletka.app.ui.pages.wallet.CashuNutsPage
 import com.walletka.app.ui.theme.WalletkaTheme
 import com.walletka.app.usecases.StartWalletkaServicesUseCase
 import com.walletka.app.usecases.intro.GetIntroStateUseCase
@@ -87,6 +91,33 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("transactions") {
                             TransactionListPage(navController = navController)
+                        }
+                        composable("pay?destination={destination}&amount={amount}") {
+                            val destination = it.arguments?.getString("destination")
+                            val amount = it.arguments?.getString("amount")?.toULongOrNull()
+
+                            PayInvoicePage(
+                                navController = navController,
+                                destination = destination,
+                                amount = amount
+                            )
+                        }
+                        composable("payResult/{result}?amount={amount}&msg={msg}") {
+                            val resultString = it.arguments?.getString("result")!!
+                            val result = PayInvoiceResult.byNameIgnoreCaseOrNull(resultString)!!
+                            val amount = it.arguments?.getString("amount")?.toULongOrNull()
+                            val msg = it.arguments?.getString("msg")
+
+
+                            PayInvoiceResultPage(
+                                navController = navController,
+                                result = result,
+                                amount = amount,
+                                message = msg
+                            )
+                        }
+                        composable("cashuNuts") {
+                            CashuNutsPage(navController = navController)
                         }
                     }
                 }

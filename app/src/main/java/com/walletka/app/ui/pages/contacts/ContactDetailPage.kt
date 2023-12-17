@@ -12,8 +12,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.automirrored.twotone.Send
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -28,7 +28,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,7 +43,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.walletka.app.R
-import com.walletka.app.dto.ContactListItem
+import com.walletka.app.dto.ContactListItemDto
 import com.walletka.app.usecases.contacts.GetContactsUseCase
 import com.walletka.app.usecases.contacts.RemoveContactUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -128,7 +127,9 @@ fun ContactDetailPage(
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { /*TODO*/ }) {
+                TextButton(onClick = {
+                    navController.navigate("pay?destination=$npub")
+                }) {
                     Column {
                         Icon(
                             modifier = Modifier
@@ -152,6 +153,18 @@ fun ContactDetailPage(
                         Text(text = "Request")
                     }
                 }
+                TextButton(onClick = { /*TODO*/ }) {
+                    Column {
+                        Icon(
+                            modifier = Modifier
+                                .align(alignment = Alignment.CenterHorizontally)
+                                .size(40.dp),
+                            imageVector = Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Transactions"
+                        )
+                        Text(text = "Transactions")
+                    }
+                }
             }
         }
     }
@@ -163,7 +176,7 @@ class ContactDetailPageViewModel @Inject constructor(
     private val getContacts: GetContactsUseCase
 ) : ViewModel() {
 
-    var contact by mutableStateOf<ContactListItem?>(null)
+    var contact by mutableStateOf<ContactListItemDto?>(null)
 
     fun getContact(npub: String) {
         viewModelScope.launch {

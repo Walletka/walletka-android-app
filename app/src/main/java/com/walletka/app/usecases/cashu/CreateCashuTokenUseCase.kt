@@ -5,10 +5,10 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.walletka.app.errors.WalletkaError
-import com.walletka.app.walletka.CashuWallet
+import com.walletka.app.wallet.CashuWallet
 import javax.inject.Inject
 
-class SendCashuTokenUseCase @Inject constructor(
+class CreateCashuTokenUseCase @Inject constructor(
     private val cashuWallet: CashuWallet
 ) {
     suspend operator fun invoke(mintUrl: String, amount: ULong): Either<WalletkaError, String> {

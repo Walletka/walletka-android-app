@@ -10,25 +10,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter
-import com.walletka.app.dto.ContactListItem
+import com.walletka.app.dto.ContactListItemDto
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactListItem(contact: ContactListItem, onClick: () -> Unit) {
+fun ContactListItem(contact: ContactListItemDto, onClick: () -> Unit) {
+
     Box(modifier = Modifier
         .fillMaxWidth()
         .clickable { onClick() }) {
@@ -41,6 +37,7 @@ fun ContactListItem(contact: ContactListItem, onClick: () -> Unit) {
                         contentDescription = contact.alias,
                         modifier = Modifier
                             .height(50.dp)
+                            .width(50.dp)
                             .border(1.dp, DividerDefaults.color, CircleShape)
                             .clip(CircleShape),
                     )
@@ -62,7 +59,7 @@ fun ContactListItem(contact: ContactListItem, onClick: () -> Unit) {
 @Composable
 @Preview(showBackground = true)
 fun PreviewContactListItem() {
-    ContactListItem(
+    ContactListItemDto(
         "npub",
         "alias"
     )

@@ -78,7 +78,7 @@ fun WalletLayerActions(
                     "Nuts",
                     imageVector = Icons.Rounded.Email
                 ) {
-                    navController.navigate("nuts")
+                    navController.navigate("cashuNuts")
                 }
             }
 

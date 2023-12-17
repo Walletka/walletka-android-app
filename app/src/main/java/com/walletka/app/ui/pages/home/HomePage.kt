@@ -28,15 +28,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
-import com.walletka.app.ui.components.MainFloatingActionButton
-import com.walletka.app.ui.pages.contacts.ContactsScreen
+import com.walletka.app.R
+import com.walletka.app.ui.pages.contacts.ContactsPage
 import com.walletka.app.ui.pages.dashboard.DashboardScreen
+import com.walletka.app.ui.theme.sampleGradientColors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
@@ -48,7 +49,6 @@ fun HomePage(
     navController: NavController
 ) {
     val scope = rememberCoroutineScope()
-    val gradientColors = listOf(Color.Blue, Color.Magenta /*...*/)
 
     val tabs = listOf("Home", "Contacts")
     val pageState = rememberPagerState {
@@ -95,11 +95,11 @@ fun HomePage(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Walletka",
+                        text = stringResource(id = R.string.app_name),
                         fontSize = 25.sp,
                         style = TextStyle(
                             brush = Brush.linearGradient(
-                                colors = gradientColors
+                                colors = sampleGradientColors
                             )
                         )
                     )
@@ -159,7 +159,7 @@ fun HomePage(
             ) { tabIndex ->
                 when (tabIndex) {
                     0 -> DashboardScreen(navController)
-                    1 -> ContactsScreen(navController)
+                    1 -> ContactsPage(navController)
                 }
             }
         }

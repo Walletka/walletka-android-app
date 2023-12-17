@@ -1,7 +1,8 @@
-package com.walletka.app.walletka
+package com.walletka.app.wallet
 
 import android.util.Log
 import com.tchaika.cashu_sdk.Amount
+import com.tchaika.cashu_sdk.Bolt11Invoice
 import com.tchaika.cashu_sdk.Id
 import com.tchaika.cashu_sdk.Proof
 import com.tchaika.cashu_sdk.PublicKey
@@ -57,7 +58,7 @@ class CashuWallet @Inject constructor(
     private suspend fun nostrSubscribe() {
         nostrClient.messagesChannel.consumeEach {
             if (it.second.startsWith("cashuA")) {
-                receiveToken(it.second)
+                claimToken(it.second)
                 cashuRepository.saveLastNostrReceivedTokenTime(it.first.createdAt().asSecs())
             }
         }
@@ -72,14 +73,14 @@ class CashuWallet @Inject constructor(
         ).forEach {
             nostrClient.decodeNip04Message(it.content())?.let { decodedMessage ->
                 if (decodedMessage.startsWith("cashuA")) {
-                    receiveToken(decodedMessage)
+                    claimToken(decodedMessage)
                     cashuRepository.saveLastNostrReceivedTokenTime(it.createdAt().asSecs())
                 }
             }
         }
     }
 
-    private fun receiveToken(token: String) {
+    fun claimToken(token: String) {
         Log.i(TAG, "received token\n$token")
         try {
             val decodedToken = Token.fromString(token)
@@ -168,6 +169,68 @@ class CashuWallet @Inject constructor(
         return token
     }
 
+    suspend fun payInvoice(invoice: Bolt11Invoice, mintUrl: String, amount: ULong): String? {
+        Log.i(TAG, "Paying invoice of amount $amount")
+
+        val wallet = getMintWallet(mintUrl)
+        val feeReserve = wallet.checkFee(invoice)
+
+        Log.i(TAG, "Fees: ${feeReserve.toSat()} sats")
+
+        val tokensToSpend =
+            selectProofsToSpend(
+                tokens.filter { it.mintUrl == mintUrl },
+                amount + feeReserve.toSat()
+            )
+
+        Log.i(TAG, "Selected tokens to spend value: ${tokensToSpend.sumOf { it.amount }} sats")
+
+        if (tokensToSpend.sumOf { it.amount } < amount.toLong()) {
+            throw Exception("Not enough tokens!")
+        }
+
+        val parsedTokensToSpend = tokensToSpend.map {
+            Proof(
+                Amount.fromSat(it.amount.toULong()),
+                Secret.fromString(it.secret),
+                PublicKey.fromHex(it.c),
+                Id(it.tokenId),
+            )
+        }
+        val meltedResponse = wallet.melt(
+            invoice,
+            parsedTokensToSpend, feeReserve
+        )
+
+        if (meltedResponse.paid()) {
+            Log.i(TAG, "Invoice successfully paid! Preimage: ${meltedResponse.preimage()}")
+        } else {
+            Log.e(TAG, "Invoice was not paid!")
+            return null
+        }
+
+        meltedResponse.change()?.let {
+            Log.i(TAG, "Returned change: ${it.sumOf { it.amount().toSat() }} sats")
+            for (proof in it) {
+                storeProof(proof, mintUrl)
+            }
+        }
+
+        Log.i(TAG, "Deleting used tokens")
+        cashuRepository.deleteAllTokens(*tokensToSpend.toTypedArray())
+        cashuRepository.saveTransaction(true, amount.toLong())
+
+
+        return meltedResponse.preimage() ?: "null"
+    }
+
+    fun checkFees(invoice: Bolt11Invoice, mintUrl: String): ULong {
+        val wallet = getMintWallet(mintUrl)
+        val feeReserve = wallet.checkFee(invoice)
+
+        return feeReserve.toSat()
+    }
+
     private fun selectProofsToSpend(
         tokens: List<CashuTokenEntity>,
         amount: ULong
@@ -175,11 +238,11 @@ class CashuWallet @Inject constructor(
         val tokensToSpend = mutableListOf<CashuTokenEntity>()
 
         for (token in tokens.sortedBy { it.amount }) {
+            tokensToSpend.add(token)
+
             if (tokensToSpend.sumOf { it.amount }.toULong() > amount) {
                 break
             }
-
-            tokensToSpend.add(token)
         }
 
         return tokensToSpend

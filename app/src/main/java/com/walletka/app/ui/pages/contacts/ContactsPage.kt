@@ -9,7 +9,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -17,26 +16,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.walletka.app.R
-import com.walletka.app.dto.ContactListItem
+import com.walletka.app.dto.ContactListItemDto
 import com.walletka.app.ui.components.ContactList
 import com.walletka.app.ui.components.dialogs.TextEditDialog
 import com.walletka.app.usecases.contacts.AddContactUseCase
 import com.walletka.app.usecases.contacts.GetContactsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactsScreen(
+fun ContactsPage(
     navController: NavController,
     viewModel: ContactsPageViewModel = hiltViewModel()
 ) {
@@ -70,9 +67,10 @@ fun ContactsScreen(
             Icon(Icons.Default.Add, contentDescription = "Add contact")
         }
     }) { innerPadding ->
-        ContactList(Modifier.padding(innerPadding), contacts = viewModel.contacts, onItemClick = {
+        ContactList(modifier = Modifier.padding(innerPadding), contacts = viewModel.contacts, onItemClick = {
             navController.navigate("contact/${it.npub}")
         })
+
     }
 }
 
@@ -82,7 +80,7 @@ class ContactsPageViewModel @Inject constructor(
     val addContact: AddContactUseCase
 ) : ViewModel() {
 
-    val contacts = mutableStateListOf<ContactListItem>()
+    val contacts = mutableStateListOf<ContactListItemDto>()
     var newContactNpub = mutableStateOf("")
 
     init {
@@ -93,5 +91,4 @@ class ContactsPageViewModel @Inject constructor(
             }
         }
     }
-
 }

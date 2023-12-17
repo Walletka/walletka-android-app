@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -68,6 +70,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.walletka.app.R
+import com.walletka.app.enums.PayInvoiceResult
 import com.walletka.app.ui.AmountInputMask
 import com.walletka.app.ui.components.ContactList
 import com.walletka.app.ui.viewModels.SendCashuTokenScreenStep
@@ -237,7 +240,10 @@ fun SendCashuTokenForm(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SendCashuTokenResult(navController: NavController, viewModel: SendCashuTokenViewModel = hiltViewModel()) {
+fun SendCashuTokenResult(
+    navController: NavController,
+    viewModel: SendCashuTokenViewModel = hiltViewModel()
+) {
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
@@ -254,9 +260,14 @@ fun SendCashuTokenResult(navController: NavController, viewModel: SendCashuToken
         ) {
 
             ContactList(contacts = viewModel.contacts, onItemClick = {
-                viewModel.sendOverEcryptedMessage(it.npub)
+                viewModel.sendOverEncryptedMessage(it.npub)
                 showBottomSheet = false
-                navController.popBackStack()
+                val route =
+                    "payResult/${PayInvoiceResult.Success}?amount=${viewModel.amount}"
+
+                navController.navigate(route) {
+                    popUpTo("home")
+                }
             })
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -271,7 +282,6 @@ fun SendCashuTokenResult(navController: NavController, viewModel: SendCashuToken
                 .align(Alignment.Center)
                 .padding(16.dp)
         ) {
-            Icon(Icons.Default.Check, "success")
             Box(
                 modifier = Modifier
                     .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(5.dp))
@@ -329,14 +339,18 @@ fun SendCashuTokenResult(navController: NavController, viewModel: SendCashuToken
                 }
             }
             Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                ElevatedButton(onClick = {
+                ElevatedButton(
+                    onClick = {
                         showBottomSheet = true
-                }) {
-                    Row {
+                    },
+                    colors = ButtonDefaults.filledTonalButtonColors()
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.AutoMirrored.Filled.Send,
                             contentDescription = "send"
                         )
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(text = "Send to contact")
                     }
                 }
