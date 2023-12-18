@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -45,7 +46,7 @@ fun IntroPage(
 
     Scaffold() { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding).padding(horizontal = 16.dp)
         ) {
             AnimatedContent(
                 targetState = viewModel.introState,

@@ -3,8 +3,11 @@ package com.walletka.app.ui.pages.home
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -14,11 +17,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -49,29 +58,12 @@ fun HomePage(
     navController: NavController
 ) {
     val scope = rememberCoroutineScope()
+    val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
     val tabs = listOf("Home", "Contacts")
     val pageState = rememberPagerState {
         tabs.size
     }
-
-    val items = listOf(
-        BottomNavItem.Home(pageState.currentPage == 0) {
-            scope.launch {
-                pageState.animateScrollToPage(0)
-            }
-        },
-        BottomNavItem.List(pageState.currentPage == 1) {
-            scope.launch {
-                pageState.animateScrollToPage(1)
-            }
-        },
-        BottomNavItem.Analytics(pageState.currentPage == 2) {
-            scope.launch {
-                pageState.animateScrollToPage(2)
-            }
-        },
-    )
 
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     var backPressHandled by remember { mutableStateOf(false) }
@@ -89,6 +81,9 @@ fun HomePage(
             }
         }
     }
+
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -113,25 +108,30 @@ fun HomePage(
                     }
                 },
             )
-        },
-        floatingActionButton = {
-            //ElevatedButton(onClick = { navController.navigate("qrScanner")}) {
-            //    Row {
-            //        Icon(painterResource(id = R.drawable.baseline_qr_code_scanner_24), contentDescription = "Scan qr code")
-            //        Text(text = "Scan QR code", modifier = Modifier.align(Alignment.CenterVertically))
-            //    }
-            //}
-            //MainFloatingActionButton(
-            //    onCreateInvoiceClick = { navController.navigate("createInvoice") },
-            //    onQrCodeScannerClick = { navController.navigate("qrScanner") },
-            //    onPayInvoiceClick = { /*TODO*/ }
-            //)
-        },
-        floatingActionButtonPosition = FabPosition.Center,
-        bottomBar = {
-            //BottomNavigation(items)
         }
     ) { innerPadding ->
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                },
+                sheetState = sheetState
+            ) {
+                // Sheet content
+                ListItem(
+                    leadingContent = { Icon(painterResource(id = R.drawable.baseline_content_paste_24), "Paste from clipboard") },
+                    headlineContent = { Text(text = "From clipboard") },
+                )
+                ListItem(
+                    modifier = Modifier.clickable {
+                        navController.navigate("pay")
+                    },
+                    leadingContent = { Icon(painterResource(id = R.drawable.baseline_keyboard_24), "Manual input") },
+                    headlineContent = { Text(text = "Manual input") },
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -158,7 +158,13 @@ fun HomePage(
                 modifier = Modifier.fillMaxHeight()
             ) { tabIndex ->
                 when (tabIndex) {
-                    0 -> DashboardScreen(navController)
+                    0 -> DashboardScreen(
+                        navController = navController,
+                        onCreateInvoiceClick = { navController.navigate("createInvoice") },
+                        onQrCodeScannerClick = { navController.navigate("qrScanner") },
+                        onPayClick = { showBottomSheet = true }
+                    )
+
                     1 -> ContactsPage(navController)
                 }
             }

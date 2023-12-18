@@ -104,45 +104,10 @@ fun ScannerScreen(
                 end.linkTo(parent.end)
             }) {
                 QrCodeScannerCameraView() {
-                    when (it) {
-                        is QrCodeResultDto.BitcoinAddress -> {
-                            Log.i("QrCodeScanner", "Found BitcoinAddress ${it.address}")
-                        }
-
-                        is QrCodeResultDto.Bolt11Invoice -> {
-                            Log.i("QrCodeScanner", "Found Bolt11 invoice ${it.bolt11Invoice}")
-                            var route = "pay?destination=" + it.bolt11Invoice
-
-                            it.amount?.let {
-                                route += "&amount=$it"
-                            }
-
+                    it?.let {
+                        getQrCodeResultRoute(it)?.let { route ->
                             navigateTo(navController, route)
                         }
-
-                        is QrCodeResultDto.CashuToken -> {
-                            Log.i("QrCodeScanner", "Found Cashu token ${it.token}")
-
-                            navigateTo(navController, "claimCashuToken?token=${it.token}")
-                        }
-
-                        is QrCodeResultDto.EmailAddress -> {
-                            Log.i("QrCodeScanner", "Found Email address ${it.emailAddress}")
-                        }
-
-                        is QrCodeResultDto.UnsupportedFormat -> {
-                            Log.i("QrCodeScanner", "Found Unknown value ${it.rawValue}")
-                        }
-
-                        is QrCodeResultDto.Url -> {
-                            Log.i("QrCodeScanner", "Found Url ${it.url}")
-                        }
-                        is QrCodeResultDto.Npub -> {
-                            Log.i("QrCodeScanner", "Found Npub ${it.npub}")
-                            navigateTo(navController, "pay?destination=${it.npub}")
-                        }
-
-                        null -> TODO()
                     }
                 }
             }
@@ -179,7 +144,9 @@ fun ScannerScreen(
                     }
                     Divider()
                     TextButton(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            navigateTo(navController, "pay")
+                        },
                         Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         Row {

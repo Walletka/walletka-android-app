@@ -25,7 +25,7 @@ import com.walletka.app.R
 fun MainFloatingActionButton(
     onCreateInvoiceClick: () -> Unit,
     onQrCodeScannerClick: () -> Unit,
-    onPayInvoiceClick: () -> Unit
+    onPayClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -77,7 +77,7 @@ fun MainFloatingActionButton(
             )
             TextButton(
                 modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant),
-                onClick = { onPayInvoiceClick() }) {
+                onClick = { onPayClick() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_arrow_upward_24),
                     contentDescription = ""

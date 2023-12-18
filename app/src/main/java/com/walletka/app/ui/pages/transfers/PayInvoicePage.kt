@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.walletka.app.enums.DestinationType
 import com.walletka.app.ui.AmountInputMask
 import com.walletka.app.ui.viewModels.PayInvoiceViewModel
 
@@ -167,7 +168,7 @@ fun PayInvoicePage(
                 enabled = viewModel.isAmountMutable
             )
 
-            if (viewModel.useEcash) {
+            if (viewModel.useEcash && viewModel.selectedMint != null) {
                 if (viewModel.banks.isNotEmpty() && viewModel.selectedMint != null) {
                     ExposedDropdownMenuBox(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -208,7 +209,10 @@ fun PayInvoicePage(
                     Text(text = "You don't have any Cashu tokens!", color = Color.Red)
                 }
             }
-            if (!viewModel.haveEnoughFunds()) {
+
+            if (viewModel.determineDestinationType(viewModel.destination) == DestinationType.Unknown) {
+                Text(text = "Unknown destination", color = Color.Red)
+            } else if (viewModel.amountSat.toULongOrNull() != null && !viewModel.haveEnoughFunds()) {
                 Text(text = "You don't have enough funds!", color = Color.Red)
             }
 
@@ -225,7 +229,7 @@ fun PayInvoicePage(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),
-                    enabled = viewModel.haveEnoughFunds()
+                    enabled = viewModel.haveEnoughFunds() && viewModel.determineDestinationType(viewModel.destination) != DestinationType.Unknown
                 ) {
                     Text(text = "Pay")
                 }
@@ -233,8 +237,3 @@ fun PayInvoicePage(
         }
     }
 }
-
-enum class DestinationType {
-    BitcoinAddress, LightningInvoice, Nostr
-}
-
