@@ -10,8 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.tchaika.cashu_sdk.Bolt11Invoice
 import com.walletka.app.dto.ContactDetailDto
 import com.walletka.app.dto.ContactListItemDto
+import com.walletka.app.enums.DestinationType
 import com.walletka.app.enums.PayInvoiceResult
-import com.walletka.app.ui.pages.transfers.DestinationType
 import com.walletka.app.usecases.PayBolt11InvoiceUseCase
 import com.walletka.app.usecases.SendEncryptedMessageUseCase
 import com.walletka.app.usecases.cashu.CreateCashuTokenUseCase
@@ -50,7 +50,7 @@ class PayInvoiceViewModel @Inject constructor(
     var contacts = mutableStateListOf<ContactListItemDto>()
     var nostrMetadata: ContactDetailDto? by mutableStateOf(null)
 
-    var destinationType by mutableStateOf(DestinationType.Nostr)
+    var destinationType by mutableStateOf(DestinationType.Unknown)
 
     init {
         viewModelScope.launch {
@@ -58,7 +58,7 @@ class PayInvoiceViewModel @Inject constructor(
                 banks =
                     it.mapValues { tokens -> tokens.value.sumOf { proof -> proof.amount.toULong() } }
 
-                if (selectedMint == null) {
+                if (selectedMint == null && banks.isNotEmpty()) {
                     selectedMint = banks.maxBy { it.value }.key
                 }
             }
@@ -75,26 +75,34 @@ class PayInvoiceViewModel @Inject constructor(
         input?.let {
             destination = input
             isDestinationMutable = false
-            if (input.startsWith("ln")) {
-                try {
-                    val bolt11Invoice = Bolt11Invoice(input)
-                    isAmountMutable = bolt11Invoice.amount() == null
-                    Log.i("PayVM", "Amount is mutable: $isAmountMutable")
+            destinationType = determineDestinationType(destination)
 
-                    this.amountSat =
-                        bolt11Invoice.amount()?.toSat()?.toString() ?: amount?.toString() ?: "0"
+            when (destinationType) {
+                DestinationType.Unknown -> error = "Unknown destination"
+                DestinationType.BitcoinAddress -> error = "Bitcoin blockchain not supported"
+                DestinationType.LightningInvoice -> {
+                    try {
+                        val bolt11Invoice = Bolt11Invoice(input)
+                        isAmountMutable = bolt11Invoice.amount() == null
+                        Log.i("PayVM", "Amount is mutable: $isAmountMutable")
 
-                    Log.i("PayVM", "Bolt11 invoice amount: $amountSat sats")
+                        this.amountSat =
+                            bolt11Invoice.amount()?.toSat()?.toString() ?: amount?.toString() ?: "0"
 
-                    destinationType = DestinationType.LightningInvoice
-                    return
-                } catch (e: Exception) {
-                    Log.e("PayVM", "Can't decode Bolt11 invoice, ${e.localizedMessage}")
-                    error = e.localizedMessage
+                        Log.i("PayVM", "Bolt11 invoice amount: $amountSat sats")
+
+                        destinationType = DestinationType.LightningInvoice
+                        return
+                    } catch (e: Exception) {
+                        Log.e("PayVM", "Can't decode Bolt11 invoice, ${e.localizedMessage}")
+                        error = e.localizedMessage
+                    }
                 }
-            } else if (input.startsWith("npub")) {
-                viewModelScope.launch {
-                    nostrMetadata = getNostrMetadataUseCase(destination).orNull()
+
+                DestinationType.Nostr -> {
+                    viewModelScope.launch {
+                        nostrMetadata = getNostrMetadataUseCase(destination).orNull()
+                    }
                 }
             }
         }
@@ -104,8 +112,18 @@ class PayInvoiceViewModel @Inject constructor(
         }
     }
 
+    fun determineDestinationType(input: String): DestinationType {
+        return if (input.startsWith("ln")) {
+            DestinationType.LightningInvoice
+        } else if (input.startsWith("npub")) {
+            DestinationType.Nostr
+        } else {
+            DestinationType.Unknown
+        }
+    }
+
     fun pay() {
-        when (destinationType) {
+        when (determineDestinationType(destination)) {
             DestinationType.LightningInvoice -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     paying = true
@@ -162,18 +180,19 @@ class PayInvoiceViewModel @Inject constructor(
                 }
             }
 
-            DestinationType.BitcoinAddress -> TODO()
+            DestinationType.BitcoinAddress -> error = "Bitcoin blockchain not supported"
+            DestinationType.Unknown -> error = "Unknown destination"
         }
     }
 
     fun haveEnoughFunds(): Boolean {
         amountSat.toULongOrNull()?.let {
-            when (destinationType) {
+            when (determineDestinationType(destination)) {
                 DestinationType.LightningInvoice -> {
-                    if (useEcash) {
-                        return (banks[selectedMint]?.toULong() ?: 0u) > it
+                    return if (useEcash) {
+                        (banks[selectedMint]?.toULong() ?: 0u) > it
                     } else {
-                        TODO()
+                        false
                     }
                 }
 
@@ -181,9 +200,10 @@ class PayInvoiceViewModel @Inject constructor(
                     return (banks[selectedMint]?.toULong() ?: 0u) > it
                 }
 
-                DestinationType.BitcoinAddress -> TODO()
+                DestinationType.BitcoinAddress -> error = "Bitcoin blockchain not supported"
+                DestinationType.Unknown -> error = "Unknown destination"
             }
         }
-        return true
+        return false
     }
 }

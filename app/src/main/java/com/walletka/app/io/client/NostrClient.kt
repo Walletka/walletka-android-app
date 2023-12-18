@@ -62,7 +62,7 @@ class NostrClient @Inject constructor(
     val messagesChannel: Channel<Pair<Event, String>> = Channel()
 
 
-    fun start(alias: String? = null) {
+    fun start() {
         client.addRelay("wss://nostr.tchaicap.space")
         client.addRelay("wss://nostr.oxtr.dev")
 
@@ -73,8 +73,10 @@ class NostrClient @Inject constructor(
 
         _connected = true
 
+        val alias = sharedPreferences.getString("lsp_alias", null)
+
         val initialized = sharedPreferences.getBoolean("nostr_initialized", false)
-        if (!initialized || alias != null) {
+        if (!initialized) {
 
             val metadata = nostr_sdk.Metadata()
                 .setName(alias ?: "Walletka user")
@@ -82,7 +84,8 @@ class NostrClient @Inject constructor(
 
             // Update metadata
             client.setMetadata(metadata)
-            sharedPreferences.edit().putBoolean("nostr_initialized", true).apply()
+            if (alias != null)
+                sharedPreferences.edit().putBoolean("nostr_initialized", true).apply()
         }
 
 

@@ -62,7 +62,11 @@ class CashuWallet @Inject constructor(
     private suspend fun nostrSubscribe() {
         nostrClient.messagesChannel.consumeEach {
             if (it.second.startsWith("cashuA")) {
-                claimToken(it.second)
+                try {
+                    claimToken(it.second)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Cannot claim token", e)
+                }
                 cashuRepository.saveLastNostrReceivedTokenTime(it.first.createdAt().asSecs())
             }
         }
@@ -77,7 +81,11 @@ class CashuWallet @Inject constructor(
         ).forEach {
             nostrClient.decodeNip04Message(it.content())?.let { decodedMessage ->
                 if (decodedMessage.startsWith("cashuA")) {
-                    claimToken(decodedMessage)
+                    try {
+                        claimToken(decodedMessage)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Cannot claim token", e)
+                    }
                     cashuRepository.saveLastNostrReceivedTokenTime(it.createdAt().asSecs())
                 }
             }
@@ -86,29 +94,25 @@ class CashuWallet @Inject constructor(
 
     fun claimToken(token: String) {
         Log.i(TAG, "received token\n$token")
-        try {
-            val decodedToken = Token.fromString(token)
-            val mintUrl = decodedToken.token()[0].url()
-            val amount =
-                decodedToken.token().sumOf { it.proofs().sumOf { it.amount().toSat() } }
-            val wallet = getMintWallet(mintUrl)
 
-            Log.i(TAG, "Mint url: $mintUrl")
-            Log.i(TAG, "Amount: $amount")
+        val decodedToken = Token.fromString(token)
+        val mintUrl = decodedToken.token()[0].url()
+        val amount =
+            decodedToken.token().sumOf { it.proofs().sumOf { it.amount().toSat() } }
+        val wallet = getMintWallet(mintUrl)
 
-            val proofs = wallet.receive(token)
+        Log.i(TAG, "Mint url: $mintUrl")
+        Log.i(TAG, "Amount: $amount")
 
-            launch(coroutineContext, CoroutineStart.UNDISPATCHED) {
-                for (proof in proofs) {
-                    storeProof(proof, mintUrl)
-                }
-                cashuRepository.saveTransaction(
-                    false,
-                    proofs.sumOf { it.amount().toSat().toLong() })
+        val proofs = wallet.receive(token)
+
+        launch(coroutineContext, CoroutineStart.UNDISPATCHED) {
+            for (proof in proofs) {
+                storeProof(proof, mintUrl)
             }
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Cannot decode token", e)
+            cashuRepository.saveTransaction(
+                false,
+                proofs.sumOf { it.amount().toSat().toLong() })
         }
     }
 

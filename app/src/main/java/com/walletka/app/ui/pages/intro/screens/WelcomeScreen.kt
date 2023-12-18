@@ -31,7 +31,7 @@ fun WelcomeScreen(onStepCompleted: () -> Unit) {
             bottom.linkTo(nextButton.top)
         }) {
             Text(
-                stringResource(R.string.app_name), fontSize = 80.sp, fontWeight = FontWeight.ExtraBold, style = TextStyle(
+                stringResource(R.string.app_name), fontSize = 60.sp, fontWeight = FontWeight.ExtraBold, style = TextStyle(
                     brush = Brush.linearGradient(
                         colors = sampleGradientColors,
                         tileMode = TileMode.Mirror
