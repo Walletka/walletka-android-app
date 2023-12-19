@@ -7,6 +7,13 @@ fun getQrCodeResultRoute(result: QrCodeResultDto): String? {
     when (result) {
         is QrCodeResultDto.BitcoinAddress -> {
             Log.i("QrCodeScanner", "Found BitcoinAddress ${result.address}")
+            var route = "pay?destination=" +result.address
+
+            result.amountSat?.let {
+                route += "&amount=$it"
+            }
+
+            return route
         }
 
         is QrCodeResultDto.Bolt11Invoice -> {

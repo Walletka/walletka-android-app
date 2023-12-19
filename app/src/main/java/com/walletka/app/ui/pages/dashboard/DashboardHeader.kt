@@ -20,13 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.WalletLayer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardHeader(
     navController: NavController,
-    balance: ULong,
+    balance: WalletBalanceDto,
     selectedLayer: WalletLayer,
     onLayerSelected: (WalletLayer) -> Unit,
     modifier: Modifier = Modifier
@@ -42,11 +43,17 @@ fun DashboardHeader(
                 .align(Alignment.CenterHorizontally)
                 .padding(top = 40.dp, bottom = 10.dp)
         ) {
-            Text(balance.toString(), fontSize = 60.sp)
+            Text(balance.availableSats.toString(), fontSize = 60.sp)
             Text(text = "sats", modifier = Modifier.align(Alignment.Bottom))
         }
 
-        if (false) { // todo: only cashu
+        if (balance is WalletBalanceDto.BlockchainWalletBalance) {
+            if (balance.immature > 0u) {
+                Text("Pending: ${balance.untrustedPending + balance.trustedPending} sats")
+            }
+        }
+
+        if (true) { // todo: only cashu
             ExposedDropdownMenuBox(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally),

@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import nostr_sdk.Filter
 import nostr_sdk.Timestamp
@@ -35,7 +36,7 @@ class CashuWallet @Inject constructor(
 
     private val wallets = mutableMapOf<String, Wallet>()
 
-    private val tokens: MutableList<CashuTokenEntity> = mutableListOf()
+    //private val tokens: MutableList<CashuTokenEntity> = mutableListOf()
     val tokensFlow = cashuRepository.tokens
     val transactionsFlow = cashuRepository.transactions
 
@@ -53,10 +54,7 @@ class CashuWallet @Inject constructor(
     }
 
     fun getAllTokens(): List<CashuTokenEntity> {
-        tokens.clear()
-        tokens.addAll(cashuRepository.getAllTokens())
-
-        return tokens
+        return cashuRepository.getAllTokens()
     }
 
     private suspend fun nostrSubscribe() {
@@ -132,11 +130,11 @@ class CashuWallet @Inject constructor(
     }
 
     suspend fun sendToken(mintUrl: String, amount: ULong): String {
-        Log.i(TAG, "Requesting to send $amount sats")
+        Log.i(TAG, "Requesting mint $mintUrl to send $amount sats")
 
         val wallet = getMintWallet(mintUrl)
         val tokensToSpend =
-            selectProofsToSpend(tokens.filter { it.mintUrl == mintUrl }, amount ?: ULong.MAX_VALUE)
+            selectProofsToSpend(getAllTokens().filter { it.mintUrl == mintUrl }, amount)
         var valueToSpend: ULong = 0u
         val parsedTokensToSpend = tokensToSpend.map {
             valueToSpend += it.amount.toULong()
@@ -189,7 +187,7 @@ class CashuWallet @Inject constructor(
 
         val tokensToSpend =
             selectProofsToSpend(
-                tokens.filter { it.mintUrl == mintUrl },
+                getAllTokens().filter { it.mintUrl == mintUrl },
                 amount + feeReserve.toSat()
             )
 

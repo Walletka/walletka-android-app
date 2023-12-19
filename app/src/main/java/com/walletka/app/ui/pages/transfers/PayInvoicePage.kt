@@ -172,7 +172,10 @@ fun PayInvoicePage(
                 enabled = viewModel.isAmountMutable
             )
 
-            if (viewModel.useEcash && viewModel.selectedMint != null) {
+            if (viewModel.useEcash && viewModel.selectedMint != null &&
+                (viewModel.determineDestinationType(viewModel.destination) == DestinationType.Nostr ||
+                        viewModel.determineDestinationType(viewModel.destination) == DestinationType.LightningInvoice)
+            ) {
                 if (viewModel.banks.isNotEmpty() && viewModel.selectedMint != null) {
                     Spacer(modifier = Modifier.height(24.dp))
                     Row(

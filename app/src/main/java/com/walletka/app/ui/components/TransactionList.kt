@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
+import com.walletka.app.enums.WalletLayer
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import kotlin.math.min
@@ -38,7 +39,7 @@ fun TransactionList(
     val itemsToShow = min(limit, transactions.count())
 
     LazyColumn() {
-        items(itemsToShow) {
+        items(itemsToShow, key = { transactions[it].id }) {
             TransactionListItem(Modifier.animateItemPlacement(), transaction = transactions[it])
         }
 
@@ -64,32 +65,44 @@ fun TransactionList(
 fun TransactionsListPreview() {
     val transactions = listOf(
         TransactionListItemDto(
+            0,
             TransactionDirection.Received,
             100_000u,
             "Sender",
             "address",
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            WalletLayer.Blockchain,
+            true
         ),
         TransactionListItemDto(
+            1,
             TransactionDirection.Sent,
             100u,
             "Receiver",
             "address",
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            WalletLayer.Blockchain,
+            false
         ),
         TransactionListItemDto(
+            2,
             TransactionDirection.Sent,
             100u,
             "Receiver",
             "address",
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            WalletLayer.Cashu,
+            true
         ),
         TransactionListItemDto(
+            2,
             TransactionDirection.Sent,
             100u,
             "Receiver",
             "address",
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            WalletLayer.Blockchain,
+            true
         )
     )
     TransactionList(transactions = transactions, 3)

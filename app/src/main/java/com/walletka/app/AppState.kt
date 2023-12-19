@@ -1,9 +1,10 @@
 package com.walletka.app
 
+import com.walletka.app.enums.BitcoinNetwork
 import javax.inject.Inject
 
 class AppState @Inject constructor() {
-    //val bitcoinNetwork = BitcoinNetwork.REGTEST
+    val bitcoinNetwork = BitcoinNetwork.REGTEST
     val esploraUrl = "https://electrs.tchaicash.space"
     val esploraPort = 30000
     val esploraFullUrl = "$esploraUrl"

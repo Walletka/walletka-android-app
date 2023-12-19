@@ -57,7 +57,7 @@ fun WalletLayerActions(
         when (layer) {
             WalletLayer.Blockchain -> {
                 WalletLayerActionButton("UTXOs", imageVector = Icons.Default.Menu) {
-                    navController.navigate("utxos")
+                    navController.navigate("utxoList")
                 }
             }
 

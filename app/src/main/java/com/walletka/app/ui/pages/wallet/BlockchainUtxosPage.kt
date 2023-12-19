@@ -1,52 +1,41 @@
-package com.walletka.app.ui.pages.transfers
+package com.walletka.app.ui.pages.wallet
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.walletka.app.dto.TransactionListItemDto
-import com.walletka.app.enums.WalletLayer
-import com.walletka.app.ui.components.TransactionList
-import com.walletka.app.usecases.GetTransactionsUseCase
+import com.walletka.app.usecases.blockchain.GetUtxoListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.bitcoindevkit.LocalUtxo
 import javax.inject.Inject
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionListPage(
-    navController: NavController,
-    layer: WalletLayer,
-    viewModel: TransactionListPageViewModel = hiltViewModel()
-) {
-
-    LaunchedEffect(key1 = "setLayer") {
-        viewModel.selectedLayer = layer
-    }
-
+fun BlockchainUtxosPage(navController: NavController, viewModel: BlockchainUtxosViewModel = hiltViewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,7 +47,7 @@ fun TransactionListPage(
                     }
                 },
                 title = {
-                    Text(text = "Transaction history")
+                    Text(text = "UTXOs")
                 }
             )
         }
@@ -66,35 +55,52 @@ fun TransactionListPage(
         Surface(
             modifier = Modifier
                 .padding(innerPadding)
+                .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
-            TransactionList(transactions = viewModel.transactions)
+            UtxoList(utxos = viewModel.utxoList)
         }
     }
 }
 
 @HiltViewModel
-class TransactionListPageViewModel @Inject constructor(
-    private val getTransactions: GetTransactionsUseCase
-): ViewModel() {
+class BlockchainUtxosViewModel @Inject constructor(
+    private val getUtxoList: GetUtxoListUseCase
+) : ViewModel() {
 
-    var transactions = mutableStateListOf<TransactionListItemDto>()
-    var selectedLayer by mutableStateOf(WalletLayer.All)
+    var utxoList by mutableStateOf<List<LocalUtxo>>(listOf())
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            getTransactions(GetTransactionsUseCase.Params()).collect {
-                viewModelScope.launch(Dispatchers.Main) {
-                    transactions.clear()
-                    transactions.addAll(it.filter {
-                        if (selectedLayer != WalletLayer.All)
-                            it.walletLayer == selectedLayer
-                        else true
-                    }.sortedByDescending { it.time })
-                }
+        viewModelScope.launch {
+            getUtxoList().collect {
+                utxoList = it
             }
         }
     }
-
 }
 
+@Composable
+fun UtxoList(utxos: List<LocalUtxo>) {
+    LazyColumn {
+        items(utxos.count(), key = { "${utxos[it].outpoint.txid}:${utxos[it].outpoint.vout}" }) {
+            UtxoListItem(utxo = utxos[it])
+        }
+    }
+}
+
+@Composable
+fun UtxoListItem(modifier: Modifier = Modifier, utxo: LocalUtxo) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        ListItem(
+            headlineContent = {
+                Text(text = "Amount: ${utxo.txout.value} sats")
+            },
+            supportingContent = {
+                Column {
+                    Text(text = "Received on address ${utxo.txout.address}")
+                    Text(text = "Keychain: ${utxo.keychain.name}")
+                }
+            }
+        )
+    }
+}
