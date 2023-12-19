@@ -81,7 +81,7 @@ fun DashboardScreen(
                         },
                         limit = 3,
                         onMoreClick = {
-                            navController.navigate("transactions")
+                            navController.navigate("transactions/${viewModel.activeLayer.name}")
                         })
                 } else {
                     Box(

@@ -110,6 +110,7 @@ class BlockchainWallet @Inject constructor(
     suspend fun start() {
         _balance.value = getBalance()
         _transactions.value = getTransactions()
+        _utxos.value = listUnspent()
         refreshDataLoop()
     }
 
@@ -195,7 +196,7 @@ class BlockchainWallet @Inject constructor(
         Log.d(TAG, "Starting refreshing data")
         while (true) {
             syncWithBlockchain()
-            delay(10_000)
+            delay(30_000)
         }
     }
 }

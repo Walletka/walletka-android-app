@@ -8,8 +8,6 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
@@ -30,15 +28,13 @@ import com.walletka.app.ui.pages.transfers.PayInvoiceResultPage
 import com.walletka.app.ui.pages.transfers.PaymentReceivedPage
 import com.walletka.app.ui.pages.transfers.SendCashuTokenPage
 import com.walletka.app.ui.pages.transfers.TransactionListPage
+import com.walletka.app.ui.pages.wallet.BlockchainUtxosPage
 import com.walletka.app.ui.pages.wallet.CashuNutsPage
 import com.walletka.app.ui.pages.wallet.WalletInfoPage
 import com.walletka.app.ui.theme.WalletkaTheme
 import com.walletka.app.usecases.StartWalletkaServicesUseCase
 import com.walletka.app.usecases.intro.GetIntroStateUseCase
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
@@ -97,8 +93,10 @@ class MainActivity : ComponentActivity() {
                         composable("cashu/sendToken") {
                             SendCashuTokenPage(navController = navController)
                         }
-                        composable("transactions") {
-                            TransactionListPage(navController = navController)
+                        composable("transactions/{layer}") {
+                            val layer = it.arguments?.getString("layer")!!
+                            val walletLayer = WalletLayer.byNameIgnoreCaseOrNull(layer)!!
+                            TransactionListPage(navController = navController, walletLayer)
                         }
                         composable("pay?destination={destination}&amount={amount}") {
                             val destination = it.arguments?.getString("destination")
@@ -142,6 +140,9 @@ class MainActivity : ComponentActivity() {
                             val walletLayer = WalletLayer.byNameIgnoreCaseOrNull(layer)!!
 
                             WalletInfoPage(navController = navController, layer = walletLayer)
+                        }
+                        composable("utxoList") {
+                            BlockchainUtxosPage(navController = navController)
                         }
                     }
                 }
