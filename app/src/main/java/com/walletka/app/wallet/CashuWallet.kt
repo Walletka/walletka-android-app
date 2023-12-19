@@ -33,7 +33,7 @@ class CashuWallet @Inject constructor(
 ) : CoroutineScope {
     val TAG = "CashuWallet"
 
-    val wallets = mutableMapOf<String, Wallet>()
+    private val wallets = mutableMapOf<String, Wallet>()
 
     private val tokens: MutableList<CashuTokenEntity> = mutableListOf()
     val tokensFlow = cashuRepository.tokens
@@ -60,14 +60,16 @@ class CashuWallet @Inject constructor(
     }
 
     private suspend fun nostrSubscribe() {
-        nostrClient.messagesChannel.consumeEach {
-            if (it.second.startsWith("cashuA")) {
-                try {
-                    claimToken(it.second)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Cannot claim token", e)
+        nostrClient.messagesFlow.collect {
+            it?.let {
+                if (it.second.startsWith("cashuA")) {
+                    try {
+                        claimToken(it.second)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Cannot claim token", e)
+                    }
+                    cashuRepository.saveLastNostrReceivedTokenTime(it.first.createdAt().asSecs())
                 }
-                cashuRepository.saveLastNostrReceivedTokenTime(it.first.createdAt().asSecs())
             }
         }
     }

@@ -10,9 +10,9 @@ class StartWalletkaServicesUseCase @Inject constructor(
     private val cashuWallet: CashuWallet
 ) {
 
-    suspend operator fun invoke(alias: String? = null) {
+    suspend operator fun invoke() {
         Log.i("StartWalletkaUC", "starting nostr service")
-        nostrClient.start(alias)
+        nostrClient.start()
         Log.i("StartWalletkaUC", "starting cashu service")
         cashuWallet.start()
 

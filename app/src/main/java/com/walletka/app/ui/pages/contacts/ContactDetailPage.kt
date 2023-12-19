@@ -182,7 +182,7 @@ class ContactDetailPageViewModel @Inject constructor(
         viewModelScope.launch {
             getContacts().collect {
                 viewModelScope.launch(Dispatchers.Main) {
-                    contact = it.first { it.npub == npub }
+                    contact = it.firstOrNull() { it.npub == npub }
                 }
             }
         }

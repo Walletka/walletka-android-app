@@ -27,4 +27,5 @@ class SharedPreferencesModule {
     fun provideWalletkaDatabase(@ApplicationContext context: Context): WalletkaDatabase {
         return WalletkaDatabase.getDatabase(context)
     }
+
 }

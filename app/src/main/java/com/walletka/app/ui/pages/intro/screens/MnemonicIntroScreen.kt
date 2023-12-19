@@ -75,6 +75,7 @@ fun MnemonicIntroScreen(
             onClick = {
                 viewModel.saveMnemonicSeed(onStepCompleted)
             },
+            enabled = viewModel.isMnemonicOk(),
             modifier = Modifier
                 .padding(16.dp)
                 .constrainAs(nextButton) {
@@ -112,6 +113,15 @@ class MnemonicIntroScreenViewModel @Inject constructor(
                 error = null
                 onSuccess()
             })
+        }
+    }
+
+    fun isMnemonicOk(): Boolean {
+        return try {
+            Mnemonic.fromString(mnemonicSeed)
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 

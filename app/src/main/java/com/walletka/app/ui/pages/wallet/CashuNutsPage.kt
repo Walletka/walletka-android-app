@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -67,24 +68,30 @@ fun CashuNutsPage(
                 .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
-            LazyColumn() {
-                viewModel.banks.forEach { mint ->
+            if (viewModel.banks.isNotEmpty()) {
+                LazyColumn() {
+                    viewModel.banks.forEach { mint ->
 
-                    item {
-                        Text(text = mint.key)
-                    }
-                    item {
-                        Card(modifier = Modifier) {
-                            Column {
-                                mint.value.forEach { token ->
-                                    CashuTokenListItem(Modifier.animateItemPlacement(), cashuToken = token)
+                        item {
+                            Text(text = mint.key)
+                        }
+                        item {
+                            Card(modifier = Modifier) {
+                                Column {
+                                    mint.value.forEach { token ->
+                                        CashuTokenListItem(Modifier.animateItemPlacement(), cashuToken = token)
+                                    }
                                 }
                             }
                         }
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
                     }
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = "You have no Cashu tokens")
                 }
             }
         }
