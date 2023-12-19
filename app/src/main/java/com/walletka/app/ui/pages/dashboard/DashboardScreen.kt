@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.walletka.app.dto.TransactionListItemDto
+import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.WalletLayer
 import com.walletka.app.ui.components.MainFloatingActionButton
 import com.walletka.app.ui.components.TransactionList
@@ -30,6 +31,7 @@ import com.walletka.app.usecases.GetBalancesUseCase
 import com.walletka.app.usecases.GetTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -65,7 +67,7 @@ fun DashboardScreen(
         ) {
             DashboardHeader(
                 navController,
-                balance = viewModel.balances[viewModel.activeLayer] ?: 0u,
+                balance = viewModel.balances[viewModel.activeLayer] ?: WalletBalanceDto.CombinedWalletsBalance(0u),
                 viewModel.activeLayer,
                 onLayerSelected = { layer ->
                     viewModel.activeLayer = layer
@@ -74,13 +76,19 @@ fun DashboardScreen(
             Box() {
                 if (viewModel.transactions.isNotEmpty()) {
                     TransactionList(
-                        transactions = viewModel.transactions,
+                        transactions = viewModel.transactions.filter {
+                            if (viewModel.activeLayer == WalletLayer.All) true else it.walletLayer == viewModel.activeLayer
+                        },
                         limit = 3,
                         onMoreClick = {
                             navController.navigate("transactions")
                         })
                 } else {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().padding(32.dp)) {
+                    Box(
+                        contentAlignment = Alignment.Center, modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp)
+                    ) {
                         Text(text = "There are no transactions yet")
                     }
                 }
@@ -96,29 +104,22 @@ class DashboardViewModel @Inject constructor(
 ) : ViewModel() {
 
     val transactions = mutableStateListOf<TransactionListItemDto>()
-    var activeLayer by mutableStateOf(WalletLayer.Cashu)
-    var balances by mutableStateOf<Map<WalletLayer, ULong>>(mapOf())
+    var activeLayer by mutableStateOf(WalletLayer.All)
+    var balances by mutableStateOf<Map<WalletLayer, WalletBalanceDto>>(mapOf())
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             getTransactions(GetTransactionsUseCase.Params()).collect {
                 viewModelScope.launch(Dispatchers.Main) {
                     transactions.clear()
-                    transactions.addAll(it)
+                    transactions.addAll(it.sortedByDescending { it.time })
                 }
             }
         }
         viewModelScope.launch(Dispatchers.IO) {
             getBalancesUseCase(GetBalancesUseCase.Params()).collect {
                 viewModelScope.launch(Dispatchers.Main) {
-                    val m = mutableMapOf<WalletLayer, ULong>()
-                    m[WalletLayer.Blockchain] = it.onchainBalanceSat
-                    m[WalletLayer.Lightning] = it.lightningBalanceMSat
-                    m[WalletLayer.Cashu] = it.cashuBalanceSat
-                    m[WalletLayer.All] =
-                        it.onchainBalanceSat + (it.lightningBalanceMSat / 1000u) + it.cashuBalanceSat
-
-                    balances = m
+                    balances = it
                 }
             }
         }

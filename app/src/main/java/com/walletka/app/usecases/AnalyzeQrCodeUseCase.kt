@@ -2,6 +2,7 @@ package com.walletka.app.usecases
 
 import android.webkit.URLUtil
 import com.walletka.app.dto.QrCodeResultDto
+import org.bitcoindevkit.Address
 import javax.inject.Inject
 
 class AnalyzeQrCodeUseCase @Inject constructor() {
@@ -42,6 +43,13 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
 
         if (URLUtil.isValidUrl(input)) {
             return QrCodeResultDto.Url(input)
+        }
+
+        try {
+            Address(input)
+            return QrCodeResultDto.BitcoinAddress(input, 0u)
+        } catch (_: Exception) {
+
         }
 
         return QrCodeResultDto.UnsupportedFormat(input)

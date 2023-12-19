@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -60,12 +61,15 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import arrow.core.getOrElse
 import com.lightspark.composeqr.DotShape
 import com.lightspark.composeqr.QrCodeColors
 import com.lightspark.composeqr.QrCodeView
 import com.walletka.app.R
 import com.walletka.app.ui.AmountInputMask
+import com.walletka.app.usecases.blockchain.GetBlockchainAddressUseCase
 import com.walletka.app.usecases.lsp.GetMyLnUrlUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -135,7 +139,7 @@ fun CreateInvoiceScreen(
                     when (tabIndex) {
                         0 -> InvoiceView(invoice = lnUrl ?: "")
                         1 -> InvoiceView(invoice = "lightningInvoice")
-                        2 -> InvoiceView(invoice = "blockchainInvoice")
+                        2 -> InvoiceView(invoice = viewModel.blockchainAddress)
                     }
                 }
             }
@@ -148,7 +152,7 @@ fun CreateInvoiceScreen(
                                 when (pageState.currentPage) {
                                     0 -> lnUrl ?: "Error getting lnurl"
                                     1 -> "lightningInvoice"
-                                    2 -> "blockchainInvoice"
+                                    2 -> viewModel.blockchainAddress
                                     else -> "Undefined"
                                 }
                             )
@@ -172,7 +176,7 @@ fun CreateInvoiceScreen(
                                 Intent.EXTRA_TEXT, when (pageState.currentPage) {
                                     0 -> lnUrl
                                     1 -> "lightningInvoice"
-                                    2 -> "blockchainInvoice"
+                                    2 -> viewModel.blockchainAddress
                                     else -> "Undefined"
                                 }
                             )
@@ -218,7 +222,7 @@ fun CreateInvoiceScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 label = { Text("Description") },
                 value = "",
-                onValueChange = {  })
+                onValueChange = { })
         }
     }
 }
@@ -250,10 +254,10 @@ fun InvoiceView(invoice: String, modifier: Modifier = Modifier) {
                         .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     BasicText(
-                        text = "Walletka",
+                        text = stringResource(id = R.string.app_name),
                         style = TextStyle.Default.copy(
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontSize = 12.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.ExtraBold,
                             fontStyle = FontStyle.Italic,
                             fontFamily = FontFamily.Serif
@@ -273,21 +277,30 @@ fun PreviewCreateInvoiceScreen() {
 
 @HiltViewModel
 class CreateInvoiceViewModel @Inject constructor(
-    private val getMyLnUrl: GetMyLnUrlUseCase
-): ViewModel() {
+    private val getMyLnUrl: GetMyLnUrlUseCase,
+    private val getBlockchainAddress: GetBlockchainAddressUseCase
+) : ViewModel() {
 
     private var _amountSat = MutableStateFlow("")
     val amountSat = _amountSat.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     var lnUrl = amountSat.mapLatest {
-        var amount: ULong? =amountSat.value.toULongOrNull()
+        var amount: ULong? = amountSat.value.toULongOrNull()
 
         if (amount != null) {
             amount *= 1000u
         }
 
         getMyLnUrl(amount)
+    }
+
+    var blockchainAddress by mutableStateOf("Unknown")
+
+    init {
+        viewModelScope.launch {
+            blockchainAddress = getBlockchainAddress().getOrElse { "Unknown" }
+        }
     }
 
     fun setAmount(value: String) {

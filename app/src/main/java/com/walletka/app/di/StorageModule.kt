@@ -27,5 +27,10 @@ class SharedPreferencesModule {
     fun provideWalletkaDatabase(@ApplicationContext context: Context): WalletkaDatabase {
         return WalletkaDatabase.getDatabase(context)
     }
+}
 
+class MnemonicSeedProvider @Inject constructor(val sharedPreferences: SharedPreferences) {
+    fun get(): String? {
+        return sharedPreferences.getString("mnemonic_seed", null)
+    }
 }

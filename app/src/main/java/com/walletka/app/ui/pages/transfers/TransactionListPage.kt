@@ -74,7 +74,7 @@ class TransactionListPageViewModel @Inject constructor(
             getTransactions(GetTransactionsUseCase.Params()).collect {
                 viewModelScope.launch(Dispatchers.Main) {
                     transactions.clear()
-                    transactions.addAll(it)
+                    transactions.addAll(it.sortedByDescending { it.time })
                 }
             }
         }
