@@ -41,8 +41,6 @@ fun getQrCodeResultRoute(result: QrCodeResultDto): String? {
             Log.i("QrCodeScanner", "Found Npub ${result.npub}")
             return "pay?destination=${result.npub}"
         }
-
-        null -> return null
     }
     return null
 }

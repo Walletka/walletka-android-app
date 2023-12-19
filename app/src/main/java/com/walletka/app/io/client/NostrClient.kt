@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nostr_sdk.Client
@@ -56,10 +57,11 @@ class NostrClient @Inject constructor(
         return keys.publicKey()
     }
 
-    var contacts = mutableListOf<Contact>()
-    val contactsChannel: Channel<List<Contact>> = Channel()
+    var contacts = MutableStateFlow<List<Contact>>(listOf())
+    //val contactsChannel: Channel<List<Contact>> = Channel()
 
-    val messagesChannel: Channel<Pair<Event, String>> = Channel()
+    private val _messagesList = listOf<Pair<Event, String>>()
+    val messagesFlow = MutableStateFlow<Pair<Event, String>?>(null)
 
 
     fun start() {
@@ -113,7 +115,7 @@ class NostrClient @Inject constructor(
                             Log.i(TAG, "Decrypted msg: $decryptedMsg")
 
                             launch {
-                                messagesChannel.send(Pair(event, decryptedMsg))
+                                messagesFlow.value = Pair(event, decryptedMsg)
                             }
                         } else if (event.kind() == 3u.toULong()) {
                             handleNip02Event(event)
@@ -172,17 +174,12 @@ class NostrClient @Inject constructor(
         val events = getEvents(Filter().kind(3u).author(getPubKey()))
         val event = events.firstOrNull()
 
-        contacts.clear()
-
         event?.let { event ->
-            contacts.addAll(handleNip02Event(event))
-
-            launch {
-                contactsChannel.send(contacts)
-            }
+            contacts.value = handleNip02Event(event)
+            return contacts.value
         }
 
-        return contacts
+        return listOf()
     }
 
     private fun handleNip02Event(event: Event): List<Contact> {
@@ -205,17 +202,19 @@ class NostrClient @Inject constructor(
     fun addContact(npub: String) {
         val contact = Contact(PublicKey.fromBech32(npub))
 
-        contacts.add(contact)
+        val newContacts = contacts.value.toMutableList()
+        newContacts.add(contact)
 
-        updateContacts(contacts)
+        updateContacts(newContacts)
     }
 
     fun removeContact(npub: String) {
-        val index = contacts.indexOfFirst { it.publicKey().toBech32() == npub }
+        val index = contacts.value.indexOfFirst { it.publicKey().toBech32() == npub }
 
-        contacts.removeAt(index)
+        val newContacts = contacts.value.toMutableList()
+        newContacts.removeAt(index)
 
-        updateContacts(contacts)
+        updateContacts(newContacts)
     }
 
     private fun updateContacts(contacts: List<Contact>) {

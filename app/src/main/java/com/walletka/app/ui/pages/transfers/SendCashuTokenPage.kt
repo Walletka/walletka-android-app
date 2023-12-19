@@ -3,6 +3,7 @@ package com.walletka.app.ui.pages.transfers
 import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -72,6 +73,7 @@ import androidx.navigation.NavController
 import com.walletka.app.R
 import com.walletka.app.enums.PayInvoiceResult
 import com.walletka.app.ui.AmountInputMask
+import com.walletka.app.ui.components.CashuMintPicker
 import com.walletka.app.ui.components.ContactList
 import com.walletka.app.ui.viewModels.SendCashuTokenScreenStep
 import com.walletka.app.ui.viewModels.SendCashuTokenViewModel
@@ -158,7 +160,7 @@ fun SendCashuTokenForm(
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                Text(text = "Pay", fontSize = 25.sp)
+                
                 OutlinedTextField(
                     label = {
                         Text(text = "Amount")
@@ -176,41 +178,16 @@ fun SendCashuTokenForm(
                 )
 
                 if (viewModel.banks.isNotEmpty() && viewModel.selectedMint != null) {
-                    ExposedDropdownMenuBox(
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        expanded = banksExpanded,
-                        onExpandedChange = {
-                            banksExpanded = !banksExpanded
-                        }
-                    ) {
-                        ElevatedAssistChip(
-                            label = {
-                                Text(
-                                    viewModel.selectedMint!!
-                                )
-                            },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = banksExpanded) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .align(Alignment.CenterHorizontally),
-                            onClick = {},
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = banksExpanded,
-                            onDismissRequest = { banksExpanded = false }) {
-                            for (bank in viewModel.banks) {
-                                DropdownMenuItem(text = {
-                                    Text(
-                                        text = "${bank.key} - ${bank.value.toLong()} sats"
-                                    )
-                                }, onClick = {
-                                    viewModel.selectedMint = bank.key
-                                    banksExpanded = false
-                                })
-                            }
-                        }
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Select mint")
+                        Text("${viewModel.banks[viewModel.selectedMint]} sats available")
                     }
+                    CashuMintPicker(
+                        modifier = Modifier.fillMaxWidth(),
+                        selectedMint = viewModel.selectedMint,
+                        mints = viewModel.banks,
+                        onMintSelected = { viewModel.selectedMint = it })
                 } else {
                     Text(text = "You don't have any Cashu tokens!", color = Color.Red)
                 }
@@ -357,4 +334,5 @@ fun SendCashuTokenResult(
             }
         }
     }
+
 }

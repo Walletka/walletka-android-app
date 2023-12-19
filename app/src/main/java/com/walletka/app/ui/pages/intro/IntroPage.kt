@@ -141,7 +141,7 @@ class IntroPageViewModel @Inject constructor(
 
     fun startServices() {
         viewModelScope.launch {
-            startWalletkaServices(lspAlias)
+            startWalletkaServices()
         }
     }
 

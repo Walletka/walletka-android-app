@@ -6,6 +6,7 @@ import com.walletka.app.io.client.NostrClient
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import nostr_sdk.Contact
 import javax.inject.Inject
 
@@ -17,33 +18,18 @@ class GetContactsUseCase @Inject constructor(
             delay(100)
         }
 
-        val res = flow {
-            try {
-                emit(nostrClient.getContactList().map { contact ->
-                    val metadata = nostrClient.getProfile(contact.publicKey().toBech32())
-                    ContactListItemDto(
-                        contact.publicKey().toBech32(),
-                        resolveUserName(contact),
-                        metadata?.getPicture()
-                    )
-                })
-                nostrClient.contactsChannel.consumeEach {
-                    val parsed = it.map { contact ->
-                        val metadata = nostrClient.getProfile(contact.publicKey().toBech32())
-                        ContactListItemDto(
-                            contact.publicKey().toBech32(),
-                            resolveUserName(contact),
-                            metadata?.getPicture()
-                        )
-                    }
-                    emit(parsed)
-                }
-            } catch (e: Exception) {
-                Log.i("TAG", e.localizedMessage)
+        nostrClient.getContactList()
+
+        return nostrClient.contacts.map {
+            it.map { contact ->
+                val metadata = nostrClient.getProfile(contact.publicKey().toBech32())
+                ContactListItemDto(
+                    contact.publicKey().toBech32(),
+                    resolveUserName(contact),
+                    metadata?.getPicture()
+                )
             }
         }
-
-        return res
     }
 
     private fun resolveUserName(contact: Contact): String {
