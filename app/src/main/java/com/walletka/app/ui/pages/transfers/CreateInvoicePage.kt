@@ -33,7 +33,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -68,10 +67,13 @@ import com.lightspark.composeqr.DotShape
 import com.lightspark.composeqr.QrCodeColors
 import com.lightspark.composeqr.QrCodeView
 import com.walletka.app.R
+import com.walletka.app.dto.Amount
 import com.walletka.app.ui.AmountInputMask
 import com.walletka.app.usecases.blockchain.GetBlockchainAddressUseCase
+import com.walletka.app.usecases.lightning.GetBolt11InvoiceUseCase
 import com.walletka.app.usecases.lsp.GetMyLnUrlUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -138,7 +140,7 @@ fun CreateInvoiceScreen(
                 Column {
                     when (tabIndex) {
                         0 -> InvoiceView(invoice = lnUrl ?: "")
-                        1 -> InvoiceView(invoice = "lightningInvoice")
+                        1 -> InvoiceView(invoice = viewModel.bolt11Invoice)
                         2 -> InvoiceView(invoice = viewModel.blockchainAddress)
                     }
                 }
@@ -151,7 +153,7 @@ fun CreateInvoiceScreen(
                             AnnotatedString(
                                 when (pageState.currentPage) {
                                     0 -> lnUrl ?: "Error getting lnurl"
-                                    1 -> "lightningInvoice"
+                                    1 -> viewModel.bolt11Invoice
                                     2 -> viewModel.blockchainAddress
                                     else -> "Undefined"
                                 }
@@ -175,7 +177,7 @@ fun CreateInvoiceScreen(
                             putExtra(
                                 Intent.EXTRA_TEXT, when (pageState.currentPage) {
                                     0 -> lnUrl
-                                    1 -> "lightningInvoice"
+                                    1 -> viewModel.bolt11Invoice
                                     2 -> viewModel.blockchainAddress
                                     else -> "Undefined"
                                 }
@@ -214,6 +216,7 @@ fun CreateInvoiceScreen(
                 visualTransformation = AmountInputMask(),
                 onValueChange = {
                     viewModel.setAmount(it)
+                    viewModel.refreshBolt11Url()
                 })
 
             Spacer(Modifier.height(5.dp))
@@ -278,7 +281,8 @@ fun PreviewCreateInvoiceScreen() {
 @HiltViewModel
 class CreateInvoiceViewModel @Inject constructor(
     private val getMyLnUrl: GetMyLnUrlUseCase,
-    private val getBlockchainAddress: GetBlockchainAddressUseCase
+    private val getBlockchainAddress: GetBlockchainAddressUseCase,
+    private val getBolt11Invoice: GetBolt11InvoiceUseCase
 ) : ViewModel() {
 
     private var _amountSat = MutableStateFlow("")
@@ -296,15 +300,25 @@ class CreateInvoiceViewModel @Inject constructor(
     }
 
     var blockchainAddress by mutableStateOf("Unknown")
+    var bolt11Invoice by mutableStateOf("Unknown")
 
     init {
         viewModelScope.launch {
             blockchainAddress = getBlockchainAddress().getOrElse { "Unknown" }
         }
+        refreshBolt11Url()
     }
 
     fun setAmount(value: String) {
         _amountSat.value = value
+    }
+
+    fun refreshBolt11Url() {
+        viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.Main) {
+                bolt11Invoice = getBolt11Invoice(Amount.fromSats(amountSat.value.toULongOrNull() ?: 0u)).getOrElse { "Error" }
+            }
+        }
     }
 
 }

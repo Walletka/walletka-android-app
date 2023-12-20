@@ -1,21 +1,23 @@
 package com.walletka.app.dto
 
-import com.walletka.app.io.entity.CashuTokenEntity
-import org.bitcoindevkit.Balance
-
-sealed class WalletBalanceDto(val availableSats: ULong) {
+sealed class WalletBalanceDto(val availableAmount: Amount) {
     data class BlockchainWalletBalance(
-        val confirmed: ULong,
-        val immature: ULong,
-        val spendable: ULong,
-        val total: ULong,
-        val trustedPending: ULong,
-        val untrustedPending: ULong
+        val confirmed: Amount,
+        val immature: Amount,
+        val spendable: Amount,
+        val total: Amount,
+        val trustedPending: Amount,
+        val untrustedPending: Amount
     ) : WalletBalanceDto(spendable + trustedPending)
 
-    data class CashuWalletBalance(
-        val mints: Map<String, ULong>
-    ): WalletBalanceDto(mints.values.sumOf { it })
+    data class LightningWalletBalance(
+        val outbound: Amount,
+        val inbound: Amount
+    ) : WalletBalanceDto(outbound)
 
-    data class CombinedWalletsBalance(val sats: ULong): WalletBalanceDto(sats)
+    data class CashuWalletBalance(
+        val mints: Map<String, Amount>
+    ) : WalletBalanceDto(Amount.fromMsat(mints.values.sumOf { it.msats() }))
+
+    data class CombinedWalletsBalance(val amount: Amount) : WalletBalanceDto(amount)
 }

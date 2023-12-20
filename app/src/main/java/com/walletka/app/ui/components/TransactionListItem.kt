@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.walletka.app.R
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
 import com.walletka.app.enums.WalletLayer
@@ -75,7 +76,7 @@ fun TransactionListItem(modifier: Modifier = Modifier, transaction: TransactionL
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = (if (transaction.direction == TransactionDirection.Sent) "-" else "") +
-                                "${transaction.amount} sats"
+                                "${transaction.amount.sats()} sats"
                     )
                     Box(modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -96,9 +97,9 @@ fun PreviewTransactionListItem() {
     TransactionListItem(
         Modifier,
         TransactionListItemDto(
-            0,
+            0.toString(),
             TransactionDirection.Received,
-            100_000u,
+            Amount.fromSats(100_000u),
             "Sender",
             "time",
             LocalDateTime.now(),

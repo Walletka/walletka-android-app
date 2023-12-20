@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.walletka.app.ui.components.UtxoList
 import com.walletka.app.usecases.blockchain.GetUtxoListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -76,31 +77,5 @@ class BlockchainUtxosViewModel @Inject constructor(
                 utxoList = it
             }
         }
-    }
-}
-
-@Composable
-fun UtxoList(utxos: List<LocalUtxo>) {
-    LazyColumn {
-        items(utxos.count(), key = { "${utxos[it].outpoint.txid}:${utxos[it].outpoint.vout}" }) {
-            UtxoListItem(utxo = utxos[it])
-        }
-    }
-}
-
-@Composable
-fun UtxoListItem(modifier: Modifier = Modifier, utxo: LocalUtxo) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        ListItem(
-            headlineContent = {
-                Text(text = "Amount: ${utxo.txout.value} sats")
-            },
-            supportingContent = {
-                Column {
-                    Text(text = "Received on address ${utxo.txout.address}")
-                    Text(text = "Keychain: ${utxo.keychain.name}")
-                }
-            }
-        )
     }
 }

@@ -9,7 +9,7 @@ fun getQrCodeResultRoute(result: QrCodeResultDto): String? {
             Log.i("QrCodeScanner", "Found BitcoinAddress ${result.address}")
             var route = "pay?destination=" +result.address
 
-            result.amountSat?.let {
+            result.amount?.let {
                 route += "&amount=$it"
             }
 
