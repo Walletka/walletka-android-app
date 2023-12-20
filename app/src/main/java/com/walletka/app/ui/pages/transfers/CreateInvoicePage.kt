@@ -67,6 +67,7 @@ import com.lightspark.composeqr.DotShape
 import com.lightspark.composeqr.QrCodeColors
 import com.lightspark.composeqr.QrCodeView
 import com.walletka.app.R
+import com.walletka.app.dto.Amount
 import com.walletka.app.ui.AmountInputMask
 import com.walletka.app.usecases.blockchain.GetBlockchainAddressUseCase
 import com.walletka.app.usecases.lightning.GetBolt11InvoiceUseCase
@@ -315,7 +316,7 @@ class CreateInvoiceViewModel @Inject constructor(
     fun refreshBolt11Url() {
         viewModelScope.launch(Dispatchers.IO) {
             viewModelScope.launch(Dispatchers.Main) {
-                bolt11Invoice = getBolt11Invoice(amountSat.value.toULongOrNull()).getOrElse { "Error" }
+                bolt11Invoice = getBolt11Invoice(Amount.fromSats(amountSat.value.toULongOrNull() ?: 0u)).getOrElse { "Error" }
             }
         }
     }

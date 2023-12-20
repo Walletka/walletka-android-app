@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -171,13 +172,23 @@ fun PayInvoicePage(
                 },
                 enabled = viewModel.isAmountMutable
             )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (viewModel.determineDestinationType(viewModel.destination) == DestinationType.Nostr ||
+                viewModel.determineDestinationType(viewModel.destination) == DestinationType.LightningInvoice
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = viewModel.useEcash, onCheckedChange = { viewModel.useEcash = !viewModel.useEcash })
+                    Text("Use e-cash")
+                }
+            }
 
             if (viewModel.useEcash && viewModel.selectedMint != null &&
                 (viewModel.determineDestinationType(viewModel.destination) == DestinationType.Nostr ||
                         viewModel.determineDestinationType(viewModel.destination) == DestinationType.LightningInvoice)
             ) {
                 if (viewModel.banks.isNotEmpty() && viewModel.selectedMint != null) {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier
                             .padding(vertical = 8.dp)

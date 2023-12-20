@@ -1,15 +1,13 @@
 package com.walletka.app.usecases
 
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.WalletLayer
 import com.walletka.app.wallet.BlockchainWallet
 import com.walletka.app.wallet.CashuWallet
 import com.walletka.app.wallet.LightningWallet
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 
 class GetBalancesUseCase @Inject constructor(
@@ -21,22 +19,22 @@ class GetBalancesUseCase @Inject constructor(
     suspend operator fun invoke(params: Params): kotlinx.coroutines.flow.Flow<Map<WalletLayer, WalletBalanceDto>> {
         val blockchainWalletBalance = blockchainWallet.balance.map {
             WalletBalanceDto.BlockchainWalletBalance(
-                it.confirmed,
-                it.immature,
-                it.spendable,
-                it.total,
-                it.trustedPending,
-                it.untrustedPending
+                Amount.fromSats(it.confirmed),
+                Amount.fromSats(it.immature),
+                Amount.fromSats(it.spendable),
+                Amount.fromSats(it.total),
+                Amount.fromSats(it.trustedPending),
+                Amount.fromSats(it.untrustedPending)
             )
         }
 
         val cashuWalletBalance = cashuWallet.tokensFlow.map {
-            val mints = it.groupBy { it.mintUrl }.mapValues { it.value.sumOf { it.amount.toULong() } }
+            val mints = it.groupBy { it.mintUrl }.mapValues { Amount.fromSats(it.value.sumOf { it.amount.toULong() }) }
             WalletBalanceDto.CashuWalletBalance(mints)
         }
 
         val lightningBalance = lightningWallet.spendableBalance.map {
-            WalletBalanceDto.LightningWalletBalance(it / 1000u, 0u) // Todo inbound
+            WalletBalanceDto.LightningWalletBalance(Amount.fromMsat(it), Amount.fromSats(0u)) // Todo inbound
         }
 
         return combine(blockchainWalletBalance, lightningBalance, cashuWalletBalance) { b, l, c ->
@@ -44,7 +42,7 @@ class GetBalancesUseCase @Inject constructor(
                 Pair(WalletLayer.Blockchain, b),
                 Pair(WalletLayer.Cashu, c),
                 Pair(WalletLayer.Lightning, l),
-                Pair(WalletLayer.All, WalletBalanceDto.CombinedWalletsBalance(b.availableSats + l.availableSats + c.availableSats))
+                Pair(WalletLayer.All, WalletBalanceDto.CombinedWalletsBalance(b.availableAmount + l.availableAmount + c.availableAmount))
             )
         }
     }

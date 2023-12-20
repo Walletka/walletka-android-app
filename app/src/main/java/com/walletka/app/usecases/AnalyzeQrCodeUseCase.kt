@@ -1,6 +1,7 @@
 package com.walletka.app.usecases
 
 import android.webkit.URLUtil
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.QrCodeResultDto
 import org.bitcoindevkit.Address
 import javax.inject.Inject
@@ -9,7 +10,7 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
 
     operator fun invoke(input: String): QrCodeResultDto {
         if (input.startsWith("ln")) {
-            return QrCodeResultDto.Bolt11Invoice(input,null,null)
+            return QrCodeResultDto.Bolt11Invoice(input, null, null)
         }
 
         if (input.startsWith("bitcoin:")) {
@@ -28,9 +29,9 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
 
             return if (lnInvoice != null) QrCodeResultDto.Bolt11Invoice(
                 lnInvoice,
-                amount,
+                Amount.fromSats(amount ?: 0u),
                 address
-            ) else QrCodeResultDto.BitcoinAddress(address, amount)
+            ) else QrCodeResultDto.BitcoinAddress(address, Amount.fromSats(amount ?: 0u))
         }
 
         if (input.startsWith("cashuA")) {
@@ -47,7 +48,7 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
 
         try {
             Address(input)
-            return QrCodeResultDto.BitcoinAddress(input, 0u)
+            return QrCodeResultDto.BitcoinAddress(input, Amount.zero)
         } catch (_: Exception) {
 
         }

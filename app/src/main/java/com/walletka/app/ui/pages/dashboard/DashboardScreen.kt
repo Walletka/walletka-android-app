@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.WalletLayer
@@ -67,7 +68,7 @@ fun DashboardScreen(
         ) {
             DashboardHeader(
                 navController,
-                balance = viewModel.balances[viewModel.activeLayer] ?: WalletBalanceDto.CombinedWalletsBalance(0u),
+                balance = viewModel.balances[viewModel.activeLayer] ?: WalletBalanceDto.CombinedWalletsBalance(Amount.fromSats(0u)),
                 viewModel.activeLayer,
                 onLayerSelected = { layer ->
                     viewModel.activeLayer = layer

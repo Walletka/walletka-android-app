@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
 import com.walletka.app.enums.WalletLayer
@@ -67,7 +68,7 @@ fun TransactionsListPreview() {
         TransactionListItemDto(
             0.toString(),
             TransactionDirection.Received,
-            100_000u,
+            Amount.fromSats(100_000u),
             "Sender",
             "address",
             LocalDateTime.now(),
@@ -77,7 +78,7 @@ fun TransactionsListPreview() {
         TransactionListItemDto(
             1.toString(),
             TransactionDirection.Sent,
-            100u,
+            Amount.fromSats(100u),
             "Receiver",
             "address",
             LocalDateTime.now(),
@@ -87,7 +88,7 @@ fun TransactionsListPreview() {
         TransactionListItemDto(
             2.toString(),
             TransactionDirection.Sent,
-            100u,
+            Amount.fromSats(100u),
             "Receiver",
             "address",
             LocalDateTime.now(),
@@ -97,7 +98,7 @@ fun TransactionsListPreview() {
         TransactionListItemDto(
             3.toString(),
             TransactionDirection.Sent,
-            100u,
+            Amount.fromSats(100u),
             "Receiver",
             "address",
             LocalDateTime.now(),

@@ -1,5 +1,6 @@
 package com.walletka.app.usecases
 
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
 import com.walletka.app.enums.WalletLayer
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.zip
 import org.lightningdevkit.ldknode.PaymentDirection
+import org.lightningdevkit.ldknode.PaymentStatus
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import javax.inject.Inject
@@ -29,7 +31,7 @@ class GetTransactionsUseCase @Inject constructor(
                 TransactionListItemDto(
                     tx.txid,
                     if (isSend) TransactionDirection.Sent else TransactionDirection.Received,
-                    if (isSend) tx.sent - tx.received else tx.received,
+                    Amount.fromSats(if (isSend) tx.sent - tx.received else tx.received),
                     "Subject",
                     "",
                     LocalDateTime.ofEpochSecond(tx.confirmationTime?.timestamp?.toLong() ?: 0, 0, ZoneOffset.UTC),
@@ -40,16 +42,16 @@ class GetTransactionsUseCase @Inject constructor(
         }
 
         val lightningTransactions = lightningWallet.transactions.map {
-            it.mapIndexed { index, tx ->
+            it.filter { !(it.direction == PaymentDirection.INBOUND && it.status == PaymentStatus.FAILED) }.mapIndexed { index, tx ->
                 TransactionListItemDto(
-                    "$index",
+                    "lightning-$index",
                     if (tx.direction == PaymentDirection.OUTBOUND) TransactionDirection.Sent else TransactionDirection.Received,
-                    tx.amountMsat?.div(1000u) ?: 0u,
-                    "",
+                    Amount.fromMsat(tx.amountMsat ?: 0u),
+                    "Subject",
                     "",
                     LocalDateTime.now(),
                     WalletLayer.Lightning,
-                    true
+                    tx.status == PaymentStatus.SUCCEEDED
                 )
             }
         }
@@ -59,7 +61,7 @@ class GetTransactionsUseCase @Inject constructor(
                 TransactionListItemDto(
                     "cashu-${tx.id}",
                     if (tx.sent) TransactionDirection.Sent else TransactionDirection.Received,
-                    tx.amount.toULong(),
+                    Amount.fromSats(tx.amount.toULong()),
                     tx.memo ?: "Subject",
                     "",
                     LocalDateTime.ofEpochSecond(tx.timestamp, 0, ZoneOffset.UTC),

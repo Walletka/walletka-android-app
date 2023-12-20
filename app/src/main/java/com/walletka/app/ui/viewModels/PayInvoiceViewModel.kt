@@ -3,12 +3,12 @@ package com.walletka.app.ui.viewModels
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tchaika.cashu_sdk.Bolt11Invoice
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.ContactDetailDto
 import com.walletka.app.dto.ContactListItemDto
 import com.walletka.app.dto.WalletBalanceDto
@@ -45,7 +45,7 @@ class PayInvoiceViewModel @Inject constructor(
     var destination by mutableStateOf("")
     var isAmountMutable by mutableStateOf(true)
     var isDestinationMutable by mutableStateOf(true)
-    var useEcash by mutableStateOf(true) // Todo
+    var useEcash by mutableStateOf(false)
 
     var banks by mutableStateOf(mapOf<String, ULong>())
     var selectedMint: String? by mutableStateOf(null)
@@ -108,6 +108,14 @@ class PayInvoiceViewModel @Inject constructor(
                         Log.i("PayVM", "Bolt11 invoice amount: $amountSat sats")
 
                         destinationType = DestinationType.LightningInvoice
+
+                        selectedMint?.let {
+                            useEcash = true
+                            if (!haveEnoughFunds()) {
+                                useEcash = false
+                            }
+                        }
+
                         return
                     } catch (e: Exception) {
                         Log.e("PayVM", "Can't decode Bolt11 invoice, ${e.localizedMessage}")
@@ -116,6 +124,7 @@ class PayInvoiceViewModel @Inject constructor(
                 }
 
                 DestinationType.Nostr -> {
+                    useEcash = true
                     viewModelScope.launch {
                         nostrMetadata = getNostrMetadataUseCase(destination).orNull()
                     }
@@ -159,7 +168,7 @@ class PayInvoiceViewModel @Inject constructor(
                             destination,
                             useEcash,
                             selectedMint,
-                            amountSat.toULongOrNull()
+                            Amount.fromSats(amountSat.toULongOrNull() ?: 0u)
                         )
                     ).fold(
                         {
@@ -179,7 +188,7 @@ class PayInvoiceViewModel @Inject constructor(
                 viewModelScope.launch {
                     paying = true
                     var token = ""
-                    createCashuToken(selectedMint!!, amountSat.toULong()).fold(
+                    createCashuToken(selectedMint!!, Amount.fromSats(amountSat.toULong())).fold(
                         {
                             error = it.innerMessage
                             return@fold
@@ -209,7 +218,7 @@ class PayInvoiceViewModel @Inject constructor(
 
             DestinationType.BitcoinAddress -> {
                 viewModelScope.launch {
-                    payToBitcoinAddress(destination, amountSat.toULong()).fold(
+                    payToBitcoinAddress(destination, Amount.fromSats(amountSat.toULong())).fold(
                         {
                             error = it.innerMessage
                         },
@@ -233,7 +242,7 @@ class PayInvoiceViewModel @Inject constructor(
                     return if (useEcash) {
                         (banks[selectedMint]?.toULong() ?: 0u) > it
                     } else {
-                        false
+                        (balances[WalletLayer.Lightning]?.availableAmount?.sats() ?: 0u) > (amountSat.toULongOrNull() ?: 0u)
                     }
                 }
 
@@ -242,7 +251,7 @@ class PayInvoiceViewModel @Inject constructor(
                 }
 
                 DestinationType.BitcoinAddress -> {
-                    return (balances[WalletLayer.Blockchain]?.availableSats
+                    return (balances[WalletLayer.Blockchain]?.availableAmount?.sats()
                         ?: 0u) > (amountSat.toULongOrNull() ?: 0u)
                 }
 

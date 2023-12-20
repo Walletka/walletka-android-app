@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 data class TransactionListItemDto (
     val id: String,
     val direction: TransactionDirection,
-    val amount: ULong,
+    val amount: Amount,
     val primaryText: String,
     val secondaryText: String,
     val time: LocalDateTime,

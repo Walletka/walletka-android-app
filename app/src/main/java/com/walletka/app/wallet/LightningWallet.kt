@@ -76,8 +76,8 @@ class LightningWallet @Inject constructor(
     suspend fun openChannel(
         nodeId: PublicKey,
         address: NetAddress,
-        amount: ULong,
-        pushAmount: ULong = 0u,
+        amountSats: ULong,
+        pushAmountMsats: ULong = 0u,
         announce: Boolean = true
     ) {
         withContext(Dispatchers.IO) {
@@ -85,7 +85,7 @@ class LightningWallet @Inject constructor(
             channelConfig.setAcceptUnderpayingHtlcs(true)
 
             node.connectOpenChannel(
-                nodeId, address, amount, pushAmount, channelConfig, announce
+                nodeId, address, amountSats, pushAmountMsats, channelConfig, announce
             )
         }
     }
