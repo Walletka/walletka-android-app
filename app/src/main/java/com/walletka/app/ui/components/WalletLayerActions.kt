@@ -63,7 +63,7 @@ fun WalletLayerActions(
 
             WalletLayer.Lightning -> {
                 WalletLayerActionButton("Channels", imageVector = Icons.Rounded.List) {
-                    navController.navigate("channels")
+                    navController.navigate("lightningChannels")
                 }
             }
 

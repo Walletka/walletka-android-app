@@ -5,7 +5,7 @@ import com.walletka.app.enums.WalletLayer
 import java.time.LocalDateTime
 
 data class TransactionListItemDto (
-    val id: Int,
+    val id: String,
     val direction: TransactionDirection,
     val amount: ULong,
     val primaryText: String,

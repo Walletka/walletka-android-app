@@ -96,7 +96,7 @@ fun PreviewTransactionListItem() {
     TransactionListItem(
         Modifier,
         TransactionListItemDto(
-            0,
+            0.toString(),
             TransactionDirection.Received,
             100_000u,
             "Sender",

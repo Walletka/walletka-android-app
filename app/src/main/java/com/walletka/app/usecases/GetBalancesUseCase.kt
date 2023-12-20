@@ -4,6 +4,7 @@ import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.WalletLayer
 import com.walletka.app.wallet.BlockchainWallet
 import com.walletka.app.wallet.CashuWallet
+import com.walletka.app.wallet.LightningWallet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
@@ -13,6 +14,7 @@ import javax.inject.Inject
 
 class GetBalancesUseCase @Inject constructor(
     private val blockchainWallet: BlockchainWallet,
+    private val lightningWallet: LightningWallet,
     private val cashuWallet: CashuWallet
 ) {
 
@@ -33,11 +35,16 @@ class GetBalancesUseCase @Inject constructor(
             WalletBalanceDto.CashuWalletBalance(mints)
         }
 
-        return blockchainWalletBalance.combine(cashuWalletBalance) { b, c ->
+        val lightningBalance = lightningWallet.spendableBalance.map {
+            WalletBalanceDto.LightningWalletBalance(it / 1000u, 0u) // Todo inbound
+        }
+
+        return combine(blockchainWalletBalance, lightningBalance, cashuWalletBalance) { b, l, c ->
             mapOf(
                 Pair(WalletLayer.Blockchain, b),
                 Pair(WalletLayer.Cashu, c),
-                Pair(WalletLayer.All, WalletBalanceDto.CombinedWalletsBalance(b.availableSats + c.availableSats))
+                Pair(WalletLayer.Lightning, l),
+                Pair(WalletLayer.All, WalletBalanceDto.CombinedWalletsBalance(b.availableSats + l.availableSats + c.availableSats))
             )
         }
     }

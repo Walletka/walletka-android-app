@@ -30,6 +30,7 @@ import com.walletka.app.ui.pages.transfers.SendCashuTokenPage
 import com.walletka.app.ui.pages.transfers.TransactionListPage
 import com.walletka.app.ui.pages.wallet.BlockchainUtxosPage
 import com.walletka.app.ui.pages.wallet.CashuNutsPage
+import com.walletka.app.ui.pages.wallet.LightningChannelsPage
 import com.walletka.app.ui.pages.wallet.WalletInfoPage
 import com.walletka.app.ui.theme.WalletkaTheme
 import com.walletka.app.usecases.StartWalletkaServicesUseCase
@@ -143,6 +144,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("utxoList") {
                             BlockchainUtxosPage(navController = navController)
+                        }
+                        composable("lightningChannels") {
+                            LightningChannelsPage(navController = navController)
                         }
                     }
                 }

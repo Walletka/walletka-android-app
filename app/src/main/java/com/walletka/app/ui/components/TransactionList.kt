@@ -65,7 +65,7 @@ fun TransactionList(
 fun TransactionsListPreview() {
     val transactions = listOf(
         TransactionListItemDto(
-            0,
+            0.toString(),
             TransactionDirection.Received,
             100_000u,
             "Sender",
@@ -75,7 +75,7 @@ fun TransactionsListPreview() {
             true
         ),
         TransactionListItemDto(
-            1,
+            1.toString(),
             TransactionDirection.Sent,
             100u,
             "Receiver",
@@ -85,7 +85,7 @@ fun TransactionsListPreview() {
             false
         ),
         TransactionListItemDto(
-            2,
+            2.toString(),
             TransactionDirection.Sent,
             100u,
             "Receiver",
@@ -95,7 +95,7 @@ fun TransactionsListPreview() {
             true
         ),
         TransactionListItemDto(
-            2,
+            3.toString(),
             TransactionDirection.Sent,
             100u,
             "Receiver",

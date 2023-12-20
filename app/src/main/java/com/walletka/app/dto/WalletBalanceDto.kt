@@ -13,9 +13,14 @@ sealed class WalletBalanceDto(val availableSats: ULong) {
         val untrustedPending: ULong
     ) : WalletBalanceDto(spendable + trustedPending)
 
+    data class LightningWalletBalance(
+        val outbound: ULong,
+        val inbound: ULong
+    ) : WalletBalanceDto(outbound)
+
     data class CashuWalletBalance(
         val mints: Map<String, ULong>
-    ): WalletBalanceDto(mints.values.sumOf { it })
+    ) : WalletBalanceDto(mints.values.sumOf { it })
 
-    data class CombinedWalletsBalance(val sats: ULong): WalletBalanceDto(sats)
+    data class CombinedWalletsBalance(val sats: ULong) : WalletBalanceDto(sats)
 }
