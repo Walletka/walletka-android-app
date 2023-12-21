@@ -31,6 +31,6 @@ class SharedPreferencesModule {
 
 class MnemonicSeedProvider @Inject constructor(val sharedPreferences: SharedPreferences) {
     fun get(): String? {
-        return sharedPreferences.getString("mnemonic_seed", null)
+        return sharedPreferences.getString("mnemonic_seed", null) // TODO: Use android keystore
     }
 }

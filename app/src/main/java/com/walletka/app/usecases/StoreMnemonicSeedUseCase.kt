@@ -13,10 +13,10 @@ import org.bitcoindevkit.WordCount
 import javax.inject.Inject
 
 class StoreMnemonicSeedUseCase @Inject constructor(
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences // TODO: Don't try to access access data layer directly from usecase
 ) {
     suspend operator fun invoke(params: Params): Either<WalletkaError, Unit> {
-
+        // TODO: Use android keystore
         params.mnemonicSeed?.let {
             try {
                 Mnemonic.fromString(it)
