@@ -8,16 +8,19 @@ import com.walletka.app.io.entity.CashuTokenDao
 import com.walletka.app.io.entity.CashuTokenEntity
 import com.walletka.app.io.entity.CashuTransactionEntity
 import com.walletka.app.io.entity.CashuTransactionsDao
+import com.walletka.app.io.entity.LightningTransactionEntity
+import com.walletka.app.io.entity.LightningTransactionsDao
 
 @Database(
-    entities = [CashuTokenEntity::class, CashuTransactionEntity::class],
-    version = 2,
+    entities = [CashuTokenEntity::class, CashuTransactionEntity::class, LightningTransactionEntity::class],
+    version = 3,
     exportSchema = false
 )
 public abstract class WalletkaDatabase : RoomDatabase() {
 
     abstract fun cashuTokenDao(): CashuTokenDao
     abstract fun cashuTransactionsDao(): CashuTransactionsDao
+    abstract fun lightningTransactionsDao(): LightningTransactionsDao
 
     companion object {
         // Singleton prevents multiple instances of database opening at the

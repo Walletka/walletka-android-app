@@ -29,9 +29,12 @@ import com.walletka.app.ui.components.MainFloatingActionButton
 import com.walletka.app.ui.components.TransactionList
 import com.walletka.app.ui.components.WalletLayerActions
 import com.walletka.app.usecases.GetBalancesUseCase
+import com.walletka.app.usecases.GetConnectionStatusUseCase
 import com.walletka.app.usecases.GetTransactionsUseCase
+import com.walletka.app.usecases.WalletkaConnectionStatusDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -72,7 +75,9 @@ fun DashboardScreen(
                 viewModel.activeLayer,
                 onLayerSelected = { layer ->
                     viewModel.activeLayer = layer
-                })
+                },
+                connectionStatus = viewModel.connectionStatusDto.status()
+            )
             WalletLayerActions(navController = navController, layer = viewModel.activeLayer)
             Box() {
                 if (viewModel.transactions.isNotEmpty()) {
@@ -101,12 +106,19 @@ fun DashboardScreen(
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getTransactions: GetTransactionsUseCase,
-    private val getBalancesUseCase: GetBalancesUseCase
+    private val getBalancesUseCase: GetBalancesUseCase,
+    private val getConnectionStatus: GetConnectionStatusUseCase
 ) : ViewModel() {
 
     val transactions = mutableStateListOf<TransactionListItemDto>()
     var activeLayer by mutableStateOf(WalletLayer.All)
     var balances by mutableStateOf<Map<WalletLayer, WalletBalanceDto>>(mapOf())
+    var connectionStatusDto by mutableStateOf<WalletkaConnectionStatusDto>(
+        WalletkaConnectionStatusDto(
+            internetConnected = false,
+            lspConnected = false
+        )
+    )
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -122,6 +134,11 @@ class DashboardViewModel @Inject constructor(
                 viewModelScope.launch(Dispatchers.Main) {
                     balances = it
                 }
+            }
+        }
+        viewModelScope.launch {
+            getConnectionStatus().collect {
+                connectionStatusDto = it
             }
         }
     }

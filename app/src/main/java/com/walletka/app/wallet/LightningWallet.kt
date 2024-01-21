@@ -1,6 +1,8 @@
 package com.walletka.app.wallet
 
 import android.util.Log
+import com.walletka.app.dto.Amount
+import com.walletka.app.io.repository.LdkRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -14,18 +16,21 @@ import kotlinx.coroutines.withContext
 import org.lightningdevkit.ldknode.Bolt11Invoice
 import org.lightningdevkit.ldknode.ChannelConfig
 import org.lightningdevkit.ldknode.ChannelDetails
-import org.lightningdevkit.ldknode.NetAddress
+import org.lightningdevkit.ldknode.Event
 import org.lightningdevkit.ldknode.PaymentDetails
 import org.lightningdevkit.ldknode.PaymentHash
 import org.lightningdevkit.ldknode.PeerDetails
 import org.lightningdevkit.ldknode.PublicKey
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
 
 @Singleton
 class LightningWallet @Inject constructor(
-    private val lightningNodeFactory: LightningNodeFactory
+    private val lightningNodeFactory: LightningNodeFactory,
+    private val ldkRepository: LdkRepository
 ) : CoroutineScope {
     private val _events = LightningWalletEvents()
     val events = _events.events
@@ -42,16 +47,16 @@ class LightningWallet @Inject constructor(
     }
 
     private val _channels: MutableStateFlow<List<ChannelDetails>> by lazy { MutableStateFlow(node.listChannels()) }
-    val channels by lazy {  _channels.asStateFlow() }
+    val channels by lazy { _channels.asStateFlow() }
 
     private val _peers: MutableStateFlow<List<PeerDetails>> by lazy { MutableStateFlow(node.listPeers()) }
-    val peers by lazy {  _peers.asStateFlow() }
+    val peers by lazy { _peers.asStateFlow() }
 
     private val _transactions: MutableStateFlow<List<PaymentDetails>> by lazy { MutableStateFlow(node.listPayments()) }
-    val transactions by lazy {  _transactions.asStateFlow() }
+    val transactions by lazy { ldkRepository.transactions }
 
-    private val _spendableBalance: MutableStateFlow<ULong> by lazy {  MutableStateFlow(getSpendableBalance()) }
-    val spendableBalance by lazy {  _spendableBalance.asStateFlow() }
+    private val _spendableBalance: MutableStateFlow<ULong> by lazy { MutableStateFlow(getSpendableBalance()) }
+    val spendableBalance by lazy { _spendableBalance.asStateFlow() }
 
     fun start() {
         launch {
@@ -75,7 +80,7 @@ class LightningWallet @Inject constructor(
 
     suspend fun openChannel(
         nodeId: PublicKey,
-        address: NetAddress,
+        address: String,
         amountSats: ULong,
         pushAmountMsats: ULong = 0u,
         announce: Boolean = true
@@ -94,7 +99,7 @@ class LightningWallet @Inject constructor(
         node.closeChannel(channelId, nodeId)
     }
 
-    suspend fun connectPeer(nodeId: PublicKey, address: NetAddress, persist: Boolean = true) {
+    suspend fun connectPeer(nodeId: PublicKey, address: String, persist: Boolean = true) {
         withContext(Dispatchers.IO) {
             node.connect(nodeId, address, persist)
         }
@@ -131,7 +136,7 @@ class LightningWallet @Inject constructor(
         }
 
         val payments = getPayments()
-        if (_transactions.value != payments){
+        if (_transactions.value != payments) {
             _transactions.value = payments
             refreshed = true
         }
@@ -160,12 +165,52 @@ class LightningWallet @Inject constructor(
             }
             node.nextEvent()?.let { event ->
                 when (event) {
-                    //is Event.PaymentSuccessful -> TODO()
+                    is Event.PaymentSuccessful -> {
+                        Log.i(TAG, "Payment sent successfully")
+                        node.listPayments().firstOrNull { it.hash == event.paymentHash }?.let { tx ->
+                            ldkRepository.saveTransaction(
+                                true,
+                                tx.amountMsat!!.toLong(),
+                                null,
+                                LocalDateTime.now().toEpochSecond(ZoneOffset.UTC).toULong()
+                            )
+                        }
+                    }
                     //is Event.PaymentFailed -> TODO()
-                    //is Event.PaymentReceived -> TODO()
+                    is Event.PaymentReceived -> {
+                        Log.i(TAG, "Payment received")
+                        node.listPayments().firstOrNull { it.hash == event.paymentHash }?.let { tx ->
+                            ldkRepository.saveTransaction(
+                                false,
+                                tx.amountMsat!!.toLong(),
+                                null,
+                                LocalDateTime.now().toEpochSecond(ZoneOffset.UTC).toULong()
+                            )
+                        }
+                    }
                     //is Event.ChannelPending -> TODO()
-                    //is Event.ChannelReady -> TODO()
-                    //is Event.ChannelClosed -> TODO()
+                    is Event.ChannelReady -> {
+                        Log.i(TAG, "Channel opened")
+                        node.listChannels().firstOrNull { it.channelId == event.channelId }?.let { channel ->
+                            ldkRepository.saveTransaction(
+                                false,
+                                Amount.fromMsat(channel.outboundCapacityMsat).sats().toLong(),
+                                "Open channel",
+                                LocalDateTime.now().toEpochSecond(ZoneOffset.UTC).toULong()
+                            )
+                        }
+                    }
+                    is Event.ChannelClosed -> {
+                        Log.i(TAG, "Channel closed")
+                        node.listChannels().firstOrNull { it.channelId == event.channelId }?.let { channel ->
+                            ldkRepository.saveTransaction(
+                                true,
+                                Amount.fromMsat(channel.outboundCapacityMsat).sats().toLong(),
+                                "Close channel",
+                                LocalDateTime.now().toEpochSecond(ZoneOffset.UTC).toULong()
+                            )
+                        }
+                    }
                     else -> {
                         Log.d(TAG, "Unexpected event $event")
                     }

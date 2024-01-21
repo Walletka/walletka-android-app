@@ -29,10 +29,12 @@ fun LightningChannelListItem(channel: ChannelDetails) {
                 Text(text = "Is usable: ${channel.isUsable}")
                 Text(text = "Unspendable reserve: ${channel.unspendablePunishmentReserve} sats")
                 LinearProgressIndicator(
+                    progress = {
+                        getChannelProgressState(
+                            channel
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    progress = getChannelProgressState(
-                        channel
-                    )
                 )
             }
         }
@@ -42,5 +44,5 @@ fun LightningChannelListItem(channel: ChannelDetails) {
 fun getChannelProgressState(channelDetails: ChannelDetails): Float {
     val outboundSats = channelDetails.outboundCapacityMsat / 1000u
     val res = outboundSats.toFloat() / channelDetails.channelValueSats.toFloat()
-    return res.toFloat()
+    return res
 }

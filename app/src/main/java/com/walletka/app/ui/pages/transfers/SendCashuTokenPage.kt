@@ -59,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -177,9 +178,22 @@ fun SendCashuTokenForm(
                     },
                 )
 
+                OutlinedTextField(
+                    label = {
+                        Text(text = "Memo")
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    value = viewModel.memo,
+                    onValueChange = {
+                        viewModel.memo = it
+                    },
+                )
+
                 if (viewModel.banks.isNotEmpty() && viewModel.selectedMint != null) {
                     Spacer(modifier = Modifier.height(24.dp))
-                    Row(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Select mint")
                         Text("${viewModel.banks[viewModel.selectedMint]} sats available")
                     }
