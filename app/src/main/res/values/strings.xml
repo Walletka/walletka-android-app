@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TchaiCASH</string>
+    <string name="app_name">SomeName</string> <!-- Todo: Only codename -->
     <string name="lsp_settings_title">Lsp settings</string>
     <string name="lsp_min_channel_size_title">Minimal channel size</string>
     <string name="lsp_include_onchain_fee_title">Include on-chain fee</string>
@@ -7,4 +7,23 @@
     <string name="lsp_max_ecash_receive_title">Maximum e-ecash receive</string>
     <string name="lsp_public_channels_title">Open channels as public</string>
     <string name="nostr_add_contact">Add contact</string>
+
+
+    <string-array name="intro_slide_titles">
+        <item>Empower Your Finances with Our Self-Custodial Bitcoin &amp; Lightning Wallet</item>
+        <item>Your Financial Independence Matters</item>
+        <item>Experience Lightning-Fast Transactions</item>
+        <item>Introducing "Tchaimian" eCash</item>
+        <item>Accessible User-Friendly Experience</item>
+        <item>Embracing the Future of Finance</item>
+    </string-array>
+
+    <string-array name="intro_slide_texts">
+        <item>Welcome to our cutting-edge Bitcoin wallet! Take control of your finances securely with our self-custodial features, allowing you full ownership and management of your Bitcoin assets.</item>
+        <item>Your financial independence matters. With our wallet, your Bitcoin is held securely in your hands. No intermediaries, no compromises – just complete control over your assets.</item>
+        <item>Experience lightning-fast transactions with our Lightning Network integration. Seamlessly send and receive Bitcoin with incredible speed and reduced fees, unlocking a new era of financial possibilities.</item>
+        <item>Introducing Cashu as a convenient custodial feature. Store and manage your digital assets across "banks" leveraging the advantages of custodial support.</item>
+        <item>Accessible to all, TchaiCASH offers a user-friendly experience. Manage your Bitcoin effortlessly, ensuring financial empowerment at your fingertips.</item>
+        <item>Join us in embracing the future of finance. TchaiCASH evolves with technology, ensuring you stay ahead in the ever-changing digital financial ecosystem. Unlock the potential of your finances today with our versatile Bitcoin and Lightning wallet, offering both self-custodial control.</item>
+    </string-array>
 </resources>

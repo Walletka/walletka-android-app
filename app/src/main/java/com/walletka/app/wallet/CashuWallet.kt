@@ -21,6 +21,7 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import nostr_sdk.Filter
 import nostr_sdk.Timestamp
 import javax.inject.Inject
@@ -112,7 +113,9 @@ class CashuWallet @Inject constructor(
             }
             cashuRepository.saveTransaction(
                 false,
-                proofs.sumOf { it.amount().toSat().toLong() })
+                proofs.sumOf { it.amount().toSat().toLong() },
+                decodedToken.memo()
+            )
         }
     }
 
@@ -129,7 +132,7 @@ class CashuWallet @Inject constructor(
         )
     }
 
-    suspend fun sendToken(mintUrl: String, amount: ULong): String {
+    suspend fun sendToken(mintUrl: String, amount: ULong, memo: String? = ""): String = withContext(Dispatchers.IO) {
         Log.i(TAG, "Requesting mint $mintUrl to send $amount sats")
 
         val wallet = getMintWallet(mintUrl)
@@ -170,11 +173,11 @@ class CashuWallet @Inject constructor(
         }
         Log.i(TAG, "Value to send $sendValue sats")
 
-        val token = Token(mintUrl, tokensToSend, "").asString()
+        val token = Token(mintUrl, tokensToSend, memo).asString()
         Log.i(TAG, "Sent token:\n$token")
 
-        cashuRepository.saveTransaction(true, sendValue.toLong())
-        return token
+        cashuRepository.saveTransaction(true, sendValue.toLong(), memo)
+        return@withContext token
     }
 
     suspend fun payInvoice(invoice: Bolt11Invoice, mintUrl: String, amount: ULong): String? {

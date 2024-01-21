@@ -1,6 +1,7 @@
 package com.walletka.app.dto
 
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 class Amount private constructor(private val amountMsat: ULong) {
 
@@ -13,7 +14,10 @@ class Amount private constructor(private val amountMsat: ULong) {
     }
 
     fun btc(): BigDecimal {
-        return amountMsat.toString().toBigDecimal().div(BigDecimal(SATS_IN_BTC)).div(BigDecimal(MILISATS_IN_SAT))
+        return BigDecimal(amountMsat.toLong()).divide(
+            BigDecimal(SATS_IN_BTC) * BigDecimal(MILISATS_IN_SAT),
+            8,
+            RoundingMode.HALF_UP)
     }
 
     operator fun plus(amount: Amount): Amount {

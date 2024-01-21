@@ -9,13 +9,11 @@ import com.walletka.app.wallet.CashuWallet
 import com.walletka.app.wallet.LightningWallet
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.zip
-import org.lightningdevkit.ldknode.PaymentDirection
-import org.lightningdevkit.ldknode.PaymentStatus
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import javax.inject.Inject
-import kotlin.random.Random
 
 class GetTransactionsUseCase @Inject constructor(
     private val blockchainWallet: BlockchainWallet,
@@ -28,13 +26,23 @@ class GetTransactionsUseCase @Inject constructor(
         val blockchainTransactions = blockchainWallet.transactions.map {
             it.sortedByDescending { it.confirmationTime?.timestamp ?: ULong.MAX_VALUE }.map { tx ->
                 val isSend = tx.sent > 0u
+                val zoneId = ZoneId
+                    .systemDefault()
+                    .rules
+                    .getOffset(
+                        Instant.now()
+                    );
                 TransactionListItemDto(
                     tx.txid,
                     if (isSend) TransactionDirection.Sent else TransactionDirection.Received,
                     Amount.fromSats(if (isSend) tx.sent - tx.received else tx.received),
-                    "Subject",
+                    if (isSend) TransactionDirection.Sent.name else TransactionDirection.Received.name,
                     "",
-                    LocalDateTime.ofEpochSecond(tx.confirmationTime?.timestamp?.toLong() ?: 0, 0, ZoneOffset.UTC),
+                    LocalDateTime.ofEpochSecond(
+                        tx.confirmationTime?.timestamp?.toLong() ?: LocalDateTime.now().toEpochSecond(zoneId),
+                        0,
+                        zoneId
+                    ),
                     WalletLayer.Blockchain,
                     tx.confirmationTime != null
                 )
@@ -42,16 +50,20 @@ class GetTransactionsUseCase @Inject constructor(
         }
 
         val lightningTransactions = lightningWallet.transactions.map {
-            it.filter { !(it.direction == PaymentDirection.INBOUND && it.status == PaymentStatus.FAILED) }.mapIndexed { index, tx ->
+            it.map { tx ->
                 TransactionListItemDto(
-                    "lightning-$index",
-                    if (tx.direction == PaymentDirection.OUTBOUND) TransactionDirection.Sent else TransactionDirection.Received,
-                    Amount.fromMsat(tx.amountMsat ?: 0u),
-                    "Subject",
+                    "lightning-${tx.id}",
+                    if (tx.sent) TransactionDirection.Sent else TransactionDirection.Received,
+                    Amount.fromMsat(tx.amountMsat.toULong()),
+                    tx.memo ?: if (tx.sent) TransactionDirection.Sent.name else TransactionDirection.Received.name,
                     "",
-                    LocalDateTime.now(),
+                    LocalDateTime.ofEpochSecond(
+                        tx.timestamp,
+                        0,
+                        ZoneOffset.UTC
+                    ),
                     WalletLayer.Lightning,
-                    tx.status == PaymentStatus.SUCCEEDED
+                    true
                 )
             }
         }
@@ -62,7 +74,7 @@ class GetTransactionsUseCase @Inject constructor(
                     "cashu-${tx.id}",
                     if (tx.sent) TransactionDirection.Sent else TransactionDirection.Received,
                     Amount.fromSats(tx.amount.toULong()),
-                    tx.memo ?: "Subject",
+                    tx.memo ?: if (tx.sent) TransactionDirection.Sent.name else TransactionDirection.Received.name,
                     "",
                     LocalDateTime.ofEpochSecond(tx.timestamp, 0, ZoneOffset.UTC),
                     WalletLayer.Cashu,

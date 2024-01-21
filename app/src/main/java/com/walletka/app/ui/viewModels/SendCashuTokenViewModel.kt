@@ -31,6 +31,7 @@ class SendCashuTokenViewModel @Inject constructor(
 
     var step by mutableStateOf(SendCashuTokenScreenStep.Form)
     var amount by mutableStateOf("")
+    var memo by mutableStateOf("")
     var tokenToSend: String? by mutableStateOf(null)
     var banks: Map<String, ULong> by mutableStateOf(mapOf())
     var selectedMint: String? by mutableStateOf(null)
@@ -63,7 +64,7 @@ class SendCashuTokenViewModel @Inject constructor(
     fun sendTokens() {
         amount.toBigDecimalOrNull()?.let {
             viewModelScope.launch(Dispatchers.IO) {
-                sendCashuToken(selectedMint!!, Amount.fromSats(amount.toULong())).fold(
+                sendCashuToken(selectedMint!!, Amount.fromSats(amount.toULong()), memo).fold(
                     {
                         error = it.innerMessage
                     },

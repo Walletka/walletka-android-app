@@ -96,6 +96,7 @@ class BlockchainWallet @Inject constructor(
     }
 
     private val keys: DescriptorSecretKey by lazy {
+        Log.i(TAG, "Blockchain wallet loading keys")
         DescriptorSecretKey(
             appState.bitcoinNetwork.toBdkNetwork(),
             Mnemonic.fromString(mnemonicSeed),
