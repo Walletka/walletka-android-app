@@ -2,6 +2,7 @@ package com.walletka.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.walletka.app.R
@@ -42,7 +44,9 @@ fun TransactionListItem(modifier: Modifier = Modifier, transaction: TransactionL
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             headlineContent = {
                 Text(
-                    text = transaction.primaryText
+                    text = transaction.primaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             },
             supportingContent = {
@@ -74,14 +78,15 @@ fun TransactionListItem(modifier: Modifier = Modifier, transaction: TransactionL
             },
             trailingContent = {
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = (if (transaction.direction == TransactionDirection.Sent) "-" else "") +
-                                "${transaction.amount.sats()} sats"
-                    )
-                    Box(modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .border(1.dp, DividerDefaults.color, shape = RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(6.dp))
+                    Row {
+                        Text(text = (if (transaction.direction == TransactionDirection.Sent) "-" else ""))
+                        BalanceText(amount = transaction.amount, fontSize = MaterialTheme.typography.labelMedium.fontSize)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .border(1.dp, DividerDefaults.color, shape = RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(6.dp))
                     ) {
                         Text(text = transaction.walletLayer.name, modifier = Modifier.padding(6.dp))
                     }

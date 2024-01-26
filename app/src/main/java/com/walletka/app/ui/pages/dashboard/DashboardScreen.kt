@@ -86,6 +86,9 @@ fun DashboardScreen(
                             if (viewModel.activeLayer == WalletLayer.All) true else it.walletLayer == viewModel.activeLayer
                         },
                         limit = 3,
+                        onItemClick = {
+                            navController.navigate("transaction/${it.walletLayer.name}/${it.id}")
+                        },
                         onMoreClick = {
                             navController.navigate("transactions/${viewModel.activeLayer.name}")
                         })

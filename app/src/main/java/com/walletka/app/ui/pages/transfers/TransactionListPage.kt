@@ -68,7 +68,12 @@ fun TransactionListPage(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            TransactionList(transactions = viewModel.transactions)
+            TransactionList(
+                transactions = viewModel.transactions,
+                onItemClick = {
+                    navController.navigate("transaction/${it.walletLayer.name}/${it.id}")
+                }
+            )
         }
     }
 }
@@ -76,7 +81,7 @@ fun TransactionListPage(
 @HiltViewModel
 class TransactionListPageViewModel @Inject constructor(
     private val getTransactions: GetTransactionsUseCase
-): ViewModel() {
+) : ViewModel() {
 
     var transactions = mutableStateListOf<TransactionListItemDto>()
     var selectedLayer by mutableStateOf(WalletLayer.All)

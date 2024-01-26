@@ -59,7 +59,7 @@ fun LightningChannelsPage(
                     }
                 },
                 title = {
-                    Text(text = "UTXOs")
+                    Text(text = "Channels")
                 },
             )
         },

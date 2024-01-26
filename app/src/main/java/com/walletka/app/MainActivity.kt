@@ -27,6 +27,7 @@ import com.walletka.app.ui.pages.transfers.PayInvoicePage
 import com.walletka.app.ui.pages.transfers.PayInvoiceResultPage
 import com.walletka.app.ui.pages.transfers.PaymentReceivedPage
 import com.walletka.app.ui.pages.transfers.SendCashuTokenPage
+import com.walletka.app.ui.pages.transfers.TransactionDetailPage
 import com.walletka.app.ui.pages.transfers.TransactionListPage
 import com.walletka.app.ui.pages.wallet.BlockchainUtxosPage
 import com.walletka.app.ui.pages.wallet.CashuNutsPage
@@ -99,6 +100,12 @@ class MainActivity : ComponentActivity() {
                             val layer = it.arguments?.getString("layer")!!
                             val walletLayer = WalletLayer.byNameIgnoreCaseOrNull(layer)!!
                             TransactionListPage(navController = navController, walletLayer)
+                        }
+                        composable("transaction/{layer}/{txId}") {
+                            val layer = it.arguments?.getString("layer")!!
+                            val txId = it.arguments?.getString("txId")!!
+                            val walletLayer = WalletLayer.byNameIgnoreCaseOrNull(layer)!!
+                            TransactionDetailPage(navController = navController, walletLayer, txId)
                         }
                         composable("pay?destination={destination}&amount={amount}") {
                             val destination = it.arguments?.getString("destination")

@@ -37,14 +37,16 @@ class CashuRepository @Inject constructor(
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    suspend fun saveTransaction(sent: Boolean, amount: Long, memo: String? = null, timestamp: ULong? = null) = withContext(Dispatchers.IO) {
+    suspend fun saveTransaction(sent: Boolean, amount: Long, memo: String? = null, timestamp: ULong? = null, secret: String? = null, fees: Long = 0) = withContext(Dispatchers.IO) {
         cashuTransactionsDao.insert(
             CashuTransactionEntity(
                 0,
                 sent,
                 amount,
                 timestamp?.toLong() ?: LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
-                memo
+                memo,
+                fees,
+                secret
             )
         )
     }

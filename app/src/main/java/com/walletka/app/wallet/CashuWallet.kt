@@ -220,6 +220,8 @@ class CashuWallet @Inject constructor(
             return null
         }
 
+        val fees = tokensToSpend.sumOf { it.amount.toULong() } - amount - (meltedResponse.change()?.sumOf { it.amount().toSat() } ?: 0u)
+
         meltedResponse.change()?.let {
             Log.i(TAG, "Returned change: ${it.sumOf { it.amount().toSat() }} sats")
             for (proof in it) {
@@ -229,8 +231,13 @@ class CashuWallet @Inject constructor(
 
         Log.i(TAG, "Deleting used tokens")
         cashuRepository.deleteAllTokens(*tokensToSpend.toTypedArray())
-        cashuRepository.saveTransaction(true, amount.toLong())
-
+        cashuRepository.saveTransaction(
+            true,
+            amount.toLong(),
+            null, // Todo: from invoice
+            secret = meltedResponse.preimage(),
+            fees = fees.toLong()
+        )
 
         return meltedResponse.preimage() ?: "null"
     }

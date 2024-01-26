@@ -31,4 +31,8 @@ class LdkRepository @Inject constructor(
             )
         )
     }
+
+    suspend fun getTransaction(id: Int): LightningTransactionEntity? {
+        return lightningTransactionsDao.getById(id)
+    }
 }
