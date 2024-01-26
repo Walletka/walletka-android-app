@@ -16,6 +16,8 @@ data class CashuTransactionEntity(
     val amount: Long,
     val timestamp: Long,
     val memo: String? = null,
+    val fees: Long = 0,
+    val secret: String? = null
 ) {
 }
 

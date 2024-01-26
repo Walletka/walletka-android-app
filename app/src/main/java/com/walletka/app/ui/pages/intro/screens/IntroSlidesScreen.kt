@@ -1,5 +1,6 @@
 package com.walletka.app.ui.pages.intro.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,12 +28,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.walletka.app.R
+import com.walletka.app.ui.theme.WalletkaTheme
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -121,20 +125,29 @@ fun Slide(title: String, description: String, image: Int) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = title,
-            fontSize = 24.sp,
+            style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
-            color = Color.Black,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = description,
-            fontSize = 16.sp,
+            style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
-            color = Color.Gray,
             modifier = Modifier.fillMaxWidth()
         )
     }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun showSlidePreview() {
+    Slide(
+        title = "Slide title",
+        description = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's " +
+                "standard dummy text ever since the 1500s,",
+        image = R.mipmap.intro_sample_slide
+    )
 }
 
 @HiltViewModel

@@ -50,6 +50,7 @@ import com.walletka.app.dto.Amount
 import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.WalletLayer
 import com.walletka.app.enums.WalletkaConnectionStatus
+import com.walletka.app.ui.components.BalanceText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,17 +70,18 @@ fun DashboardHeader(
 
         SuggestionChip(
             modifier = Modifier.padding(start = 4.dp),
-            //contentPadding = PaddingValues(vertical = 0.dp, horizontal = 10.dp),
             onClick = { /*TODO*/ },
             label = {
                 Text(connectionStatus.name)
-            })
+            }
+        )
 
         BalanceText(
             Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(top = 10.dp, bottom = 10.dp),
-            balance = balance
+            amount = balance.availableAmount,
+            animate = true
         )
 
         if (balance is WalletBalanceDto.BlockchainWalletBalance) {
@@ -126,74 +128,3 @@ fun DashboardHeader(
         }
     }
 }
-
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-fun BalanceText(modifier: Modifier = Modifier, balance: WalletBalanceDto, fontSize: TextUnit = 45.sp) {
-    Row(
-        modifier = modifier
-    ) {
-
-        val balanceCounter by animateIntAsState(
-            targetValue = balance.availableAmount.sats().toInt(),
-            animationSpec = tween(
-                durationMillis = 1300,
-                easing = FastOutSlowInEasing
-            ), label = "balance_animator"
-        )
-
-        val balanceText = Amount.fromSats(balanceCounter.toULong()).btc().toPlainString()
-        var offset = balanceText.indexOfFirst { !(it == '0' || it == '.' || it == ',') }
-
-        if (offset == -1) {
-            offset = 10
-        }
-
-        //AnimatedContent(
-        //    targetState = balanceText,
-        //    transitionSpec = {
-        //        slideIntoContainer(
-        //            towards = AnimatedContentTransitionScope.SlideDirection.Down,
-        //            animationSpec = tween(durationMillis = 500)
-        //        ) togetherWith
-        //                slideOutOfContainer(
-        //                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
-        //                    animationSpec = tween(durationMillis = 500)
-        //                )
-        //    },
-        //    contentAlignment = Alignment.Center, label = ""
-        //) { balanceText ->
-
-        Text(
-            buildAnnotatedString {
-                try {
-                    for (i in 0..<offset) {
-                        withStyle(style = SpanStyle(fontSize = fontSize, color = Color.Gray)) {
-                            append(balanceText[i])
-                        }
-                        if (i != 0 && i % 3 == 0) {
-                            append(" ")
-                        }
-                    }
-
-                    for (i in offset..<balanceText.length) {
-                        withStyle(style = SpanStyle(fontSize = fontSize, fontWeight = FontWeight.Bold)) {
-                            append(balanceText[i])
-
-                            if (i != 0 && i % 3 == 0 && i != balanceText.length - 1) {
-                                append(" ")
-                            }
-                        }
-                    }
-                    withStyle(style = SpanStyle(fontSize = fontSize)) {
-                        append(0x20BF.toChar())
-                    }
-                } catch (e: Exception) {
-                    append("Err")
-                }
-            }
-        )
-        //}
-    }
-}
-

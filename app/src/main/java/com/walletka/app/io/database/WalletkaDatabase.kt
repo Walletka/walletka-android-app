@@ -13,7 +13,7 @@ import com.walletka.app.io.entity.LightningTransactionsDao
 
 @Database(
     entities = [CashuTokenEntity::class, CashuTransactionEntity::class, LightningTransactionEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 public abstract class WalletkaDatabase : RoomDatabase() {

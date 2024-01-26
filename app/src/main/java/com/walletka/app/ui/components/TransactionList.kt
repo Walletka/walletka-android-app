@@ -2,6 +2,7 @@ package com.walletka.app.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,7 @@ import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,13 +37,18 @@ import kotlin.math.min
 fun TransactionList(
     transactions: List<TransactionListItemDto>,
     limit: Int = Int.MAX_VALUE,
+    onItemClick: (TransactionListItemDto) -> Unit = {},
     onMoreClick: () -> Unit = {}
 ) {
     val itemsToShow = min(limit, transactions.count())
 
     LazyColumn() {
         items(itemsToShow, key = { transactions[it].id }) {
-            TransactionListItem(Modifier.animateItemPlacement(), transaction = transactions[it])
+            Surface(modifier = Modifier.clickable {
+                onItemClick(transactions[it])
+            }) {
+                TransactionListItem(Modifier.animateItemPlacement(), transaction = transactions[it])
+            }
         }
 
         item {

@@ -16,6 +16,7 @@ data class LightningTransactionEntity(
     val amountMsat: Long,
     val timestamp: Long,
     val memo: String? = null,
+    val secret: String? = null
 ) {
 }
 
@@ -27,6 +28,9 @@ interface LightningTransactionsDao {
 
     @Query("SELECT * FROM lightning_transactions")
     fun getAllAsList(): List<LightningTransactionEntity>
+
+    @Query("SELECT * FROM lightning_transactions WHERE id=:id")
+    fun getById(id: Int): LightningTransactionEntity?
 
     @Insert
     fun insert(vararg token: LightningTransactionEntity)
