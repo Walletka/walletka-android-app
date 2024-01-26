@@ -9,6 +9,8 @@ import com.walletka.app.io.entity.CashuTransactionEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import nostr_sdk.Timestamp
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,13 +37,16 @@ class CashuRepository @Inject constructor(
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    suspend fun saveTransaction(sent: Boolean, amount: Long, timestamp: ULong? = null) = withContext(Dispatchers.IO) {
+    suspend fun saveTransaction(sent: Boolean, amount: Long, memo: String? = null, timestamp: ULong? = null, secret: String? = null, fees: Long = 0) = withContext(Dispatchers.IO) {
         cashuTransactionsDao.insert(
             CashuTransactionEntity(
                 0,
                 sent,
                 amount,
-                timestamp?.toLong() ?: Timestamp.now().asSecs().toLong()
+                timestamp?.toLong() ?: LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+                memo,
+                fees,
+                secret
             )
         )
     }

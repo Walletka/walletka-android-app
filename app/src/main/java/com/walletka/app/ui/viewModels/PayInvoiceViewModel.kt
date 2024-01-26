@@ -8,12 +8,17 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tchaika.cashu_sdk.Bolt11Invoice
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.ContactDetailDto
 import com.walletka.app.dto.ContactListItemDto
+import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.DestinationType
 import com.walletka.app.enums.PayInvoiceResult
+import com.walletka.app.enums.WalletLayer
+import com.walletka.app.usecases.GetBalancesUseCase
 import com.walletka.app.usecases.PayBolt11InvoiceUseCase
 import com.walletka.app.usecases.SendEncryptedMessageUseCase
+import com.walletka.app.usecases.blockchain.PayToBitcoinAddressUseCase
 import com.walletka.app.usecases.cashu.CreateCashuTokenUseCase
 import com.walletka.app.usecases.cashu.GetCashuTokensUseCase
 import com.walletka.app.usecases.contacts.GetContactsUseCase
@@ -21,23 +26,26 @@ import com.walletka.app.usecases.contacts.GetNostrMetadataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.bitcoindevkit.Address
 import javax.inject.Inject
 
 @HiltViewModel
 class PayInvoiceViewModel @Inject constructor(
     private val getCashuTokens: GetCashuTokensUseCase,
     private val payBolt11Invoice: PayBolt11InvoiceUseCase,
+    private val payToBitcoinAddress: PayToBitcoinAddressUseCase,
     private val createCashuToken: CreateCashuTokenUseCase,
     private val sendEncryptedMessage: SendEncryptedMessageUseCase,
     private val getContacts: GetContactsUseCase,
-    private val getNostrMetadataUseCase: GetNostrMetadataUseCase
+    private val getNostrMetadataUseCase: GetNostrMetadataUseCase,
+    private val getBalances: GetBalancesUseCase
 ) : ViewModel() {
 
     var amountSat by mutableStateOf("")
     var destination by mutableStateOf("")
     var isAmountMutable by mutableStateOf(true)
     var isDestinationMutable by mutableStateOf(true)
-    var useEcash by mutableStateOf(true) // Todo
+    var useEcash by mutableStateOf(false)
 
     var banks by mutableStateOf(mapOf<String, ULong>())
     var selectedMint: String? by mutableStateOf(null)
@@ -51,6 +59,8 @@ class PayInvoiceViewModel @Inject constructor(
     var nostrMetadata: ContactDetailDto? by mutableStateOf(null)
 
     var destinationType by mutableStateOf(DestinationType.Unknown)
+
+    var balances by mutableStateOf<Map<WalletLayer, WalletBalanceDto>>(mapOf())
 
     init {
         viewModelScope.launch {
@@ -69,6 +79,12 @@ class PayInvoiceViewModel @Inject constructor(
                 contacts.addAll(it)
             }
         }
+
+        viewModelScope.launch {
+            getBalances(GetBalancesUseCase.Params()).collect {
+                balances = it
+            }
+        }
     }
 
     fun processInput(input: String?, amount: ULong? = null) {
@@ -79,7 +95,7 @@ class PayInvoiceViewModel @Inject constructor(
 
             when (destinationType) {
                 DestinationType.Unknown -> error = "Unknown destination"
-                DestinationType.BitcoinAddress -> error = "Bitcoin blockchain not supported"
+                DestinationType.BitcoinAddress -> {}
                 DestinationType.LightningInvoice -> {
                     try {
                         val bolt11Invoice = Bolt11Invoice(input)
@@ -92,6 +108,14 @@ class PayInvoiceViewModel @Inject constructor(
                         Log.i("PayVM", "Bolt11 invoice amount: $amountSat sats")
 
                         destinationType = DestinationType.LightningInvoice
+
+                        selectedMint?.let {
+                            useEcash = true
+                            if (!haveEnoughFunds()) {
+                                useEcash = false
+                            }
+                        }
+
                         return
                     } catch (e: Exception) {
                         Log.e("PayVM", "Can't decode Bolt11 invoice, ${e.localizedMessage}")
@@ -100,6 +124,7 @@ class PayInvoiceViewModel @Inject constructor(
                 }
 
                 DestinationType.Nostr -> {
+                    useEcash = true
                     viewModelScope.launch {
                         nostrMetadata = getNostrMetadataUseCase(destination).orNull()
                     }
@@ -117,8 +142,19 @@ class PayInvoiceViewModel @Inject constructor(
             DestinationType.LightningInvoice
         } else if (input.startsWith("npub")) {
             DestinationType.Nostr
+        } else if (isBitcoinAddress(input)) {
+            DestinationType.BitcoinAddress
         } else {
             DestinationType.Unknown
+        }
+    }
+
+    private fun isBitcoinAddress(input: String): Boolean {
+        return try {
+            Address(input)
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -132,7 +168,7 @@ class PayInvoiceViewModel @Inject constructor(
                             destination,
                             useEcash,
                             selectedMint,
-                            amountSat.toULongOrNull()
+                            Amount.fromSats(amountSat.toULongOrNull() ?: 0u)
                         )
                     ).fold(
                         {
@@ -152,7 +188,7 @@ class PayInvoiceViewModel @Inject constructor(
                 viewModelScope.launch {
                     paying = true
                     var token = ""
-                    createCashuToken(selectedMint!!, amountSat.toULong()).fold(
+                    createCashuToken(selectedMint!!, Amount.fromSats(amountSat.toULong())).fold(
                         {
                             error = it.innerMessage
                             return@fold
@@ -180,7 +216,21 @@ class PayInvoiceViewModel @Inject constructor(
                 }
             }
 
-            DestinationType.BitcoinAddress -> error = "Bitcoin blockchain not supported"
+            DestinationType.BitcoinAddress -> {
+                viewModelScope.launch {
+                    payToBitcoinAddress(destination, Amount.fromSats(amountSat.toULong())).fold(
+                        {
+                            error = it.innerMessage
+                        },
+                        {
+                            payResults = PayInvoiceResult.Success
+                        }
+                    )
+
+                }
+
+            }
+
             DestinationType.Unknown -> error = "Unknown destination"
         }
     }
@@ -192,7 +242,7 @@ class PayInvoiceViewModel @Inject constructor(
                     return if (useEcash) {
                         (banks[selectedMint]?.toULong() ?: 0u) > it
                     } else {
-                        false
+                        (balances[WalletLayer.Lightning]?.availableAmount?.sats() ?: 0u) > (amountSat.toULongOrNull() ?: 0u)
                     }
                 }
 
@@ -200,7 +250,11 @@ class PayInvoiceViewModel @Inject constructor(
                     return (banks[selectedMint]?.toULong() ?: 0u) > it
                 }
 
-                DestinationType.BitcoinAddress -> error = "Bitcoin blockchain not supported"
+                DestinationType.BitcoinAddress -> {
+                    return (balances[WalletLayer.Blockchain]?.availableAmount?.sats()
+                        ?: 0u) > (amountSat.toULongOrNull() ?: 0u)
+                }
+
                 DestinationType.Unknown -> error = "Unknown destination"
             }
         }

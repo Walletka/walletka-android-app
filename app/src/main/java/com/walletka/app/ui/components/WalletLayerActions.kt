@@ -57,13 +57,13 @@ fun WalletLayerActions(
         when (layer) {
             WalletLayer.Blockchain -> {
                 WalletLayerActionButton("UTXOs", imageVector = Icons.Default.Menu) {
-                    navController.navigate("utxos")
+                    navController.navigate("utxoList")
                 }
             }
 
             WalletLayer.Lightning -> {
                 WalletLayerActionButton("Channels", imageVector = Icons.Rounded.List) {
-                    navController.navigate("channels")
+                    navController.navigate("lightningChannels")
                 }
             }
 

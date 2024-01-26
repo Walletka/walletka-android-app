@@ -1,19 +1,36 @@
 package com.walletka.app.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.walletka.app.R
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
+import com.walletka.app.enums.WalletLayer
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -23,22 +40,30 @@ fun TransactionListItem(modifier: Modifier = Modifier, transaction: TransactionL
     Box(
         modifier = modifier.fillMaxWidth()
     ) {
-
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             headlineContent = {
                 Text(
-                    text = transaction.primaryText
+                    text = transaction.primaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             },
             supportingContent = {
-                Text(
-                    transaction.time.format(
-                        DateTimeFormatter.ofLocalizedDateTime(
-                            FormatStyle.SHORT
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (transaction.confirmed) {
+                        Text(
+                            transaction.time.format(
+                                DateTimeFormatter.ofLocalizedDateTime(
+                                    FormatStyle.SHORT
+                                )
+                            )
                         )
-                    )
-                )
+                    } else {
+                        Icon(painterResource(id = R.drawable.baseline_access_time_24), contentDescription = "time")
+                        Text(text = "Not confirmed")
+                    }
+                }
             },
             leadingContent = {
                 Icon(
@@ -52,10 +77,20 @@ fun TransactionListItem(modifier: Modifier = Modifier, transaction: TransactionL
                 )
             },
             trailingContent = {
-                Text(
-                    text = (if (transaction.direction == TransactionDirection.Sent) "-" else "") +
-                            "${transaction.amount} sats"
-                )
+                Column(horizontalAlignment = Alignment.End) {
+                    Row {
+                        Text(text = (if (transaction.direction == TransactionDirection.Sent) "-" else ""))
+                        BalanceText(amount = transaction.amount, fontSize = MaterialTheme.typography.labelMedium.fontSize)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .border(1.dp, DividerDefaults.color, shape = RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(6.dp))
+                    ) {
+                        Text(text = transaction.walletLayer.name, modifier = Modifier.padding(6.dp))
+                    }
+                }
             }
         )
     }
@@ -67,11 +102,14 @@ fun PreviewTransactionListItem() {
     TransactionListItem(
         Modifier,
         TransactionListItemDto(
+            0.toString(),
             TransactionDirection.Received,
-            100_000u,
+            Amount.fromSats(100_000u),
             "Sender",
             "time",
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            WalletLayer.Blockchain,
+            false
         )
     )
 }

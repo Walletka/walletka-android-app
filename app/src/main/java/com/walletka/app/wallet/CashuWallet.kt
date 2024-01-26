@@ -19,7 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import nostr_sdk.Filter
 import nostr_sdk.Timestamp
 import javax.inject.Inject
@@ -35,7 +37,7 @@ class CashuWallet @Inject constructor(
 
     private val wallets = mutableMapOf<String, Wallet>()
 
-    private val tokens: MutableList<CashuTokenEntity> = mutableListOf()
+    //private val tokens: MutableList<CashuTokenEntity> = mutableListOf()
     val tokensFlow = cashuRepository.tokens
     val transactionsFlow = cashuRepository.transactions
 
@@ -53,10 +55,7 @@ class CashuWallet @Inject constructor(
     }
 
     fun getAllTokens(): List<CashuTokenEntity> {
-        tokens.clear()
-        tokens.addAll(cashuRepository.getAllTokens())
-
-        return tokens
+        return cashuRepository.getAllTokens()
     }
 
     private suspend fun nostrSubscribe() {
@@ -114,7 +113,9 @@ class CashuWallet @Inject constructor(
             }
             cashuRepository.saveTransaction(
                 false,
-                proofs.sumOf { it.amount().toSat().toLong() })
+                proofs.sumOf { it.amount().toSat().toLong() },
+                decodedToken.memo()
+            )
         }
     }
 
@@ -131,12 +132,12 @@ class CashuWallet @Inject constructor(
         )
     }
 
-    suspend fun sendToken(mintUrl: String, amount: ULong): String {
-        Log.i(TAG, "Requesting to send $amount sats")
+    suspend fun sendToken(mintUrl: String, amount: ULong, memo: String? = ""): String = withContext(Dispatchers.IO) {
+        Log.i(TAG, "Requesting mint $mintUrl to send $amount sats")
 
         val wallet = getMintWallet(mintUrl)
         val tokensToSpend =
-            selectProofsToSpend(tokens.filter { it.mintUrl == mintUrl }, amount ?: ULong.MAX_VALUE)
+            selectProofsToSpend(getAllTokens().filter { it.mintUrl == mintUrl }, amount)
         var valueToSpend: ULong = 0u
         val parsedTokensToSpend = tokensToSpend.map {
             valueToSpend += it.amount.toULong()
@@ -172,11 +173,11 @@ class CashuWallet @Inject constructor(
         }
         Log.i(TAG, "Value to send $sendValue sats")
 
-        val token = Token(mintUrl, tokensToSend, "").asString()
+        val token = Token(mintUrl, tokensToSend, memo).asString()
         Log.i(TAG, "Sent token:\n$token")
 
-        cashuRepository.saveTransaction(true, sendValue.toLong())
-        return token
+        cashuRepository.saveTransaction(true, sendValue.toLong(), memo)
+        return@withContext token
     }
 
     suspend fun payInvoice(invoice: Bolt11Invoice, mintUrl: String, amount: ULong): String? {
@@ -189,7 +190,7 @@ class CashuWallet @Inject constructor(
 
         val tokensToSpend =
             selectProofsToSpend(
-                tokens.filter { it.mintUrl == mintUrl },
+                getAllTokens().filter { it.mintUrl == mintUrl },
                 amount + feeReserve.toSat()
             )
 
@@ -219,6 +220,8 @@ class CashuWallet @Inject constructor(
             return null
         }
 
+        val fees = tokensToSpend.sumOf { it.amount.toULong() } - amount - (meltedResponse.change()?.sumOf { it.amount().toSat() } ?: 0u)
+
         meltedResponse.change()?.let {
             Log.i(TAG, "Returned change: ${it.sumOf { it.amount().toSat() }} sats")
             for (proof in it) {
@@ -228,8 +231,13 @@ class CashuWallet @Inject constructor(
 
         Log.i(TAG, "Deleting used tokens")
         cashuRepository.deleteAllTokens(*tokensToSpend.toTypedArray())
-        cashuRepository.saveTransaction(true, amount.toLong())
-
+        cashuRepository.saveTransaction(
+            true,
+            amount.toLong(),
+            null, // Todo: from invoice
+            secret = meltedResponse.preimage(),
+            fees = fees.toLong()
+        )
 
         return meltedResponse.preimage() ?: "null"
     }

@@ -33,7 +33,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,6 +47,7 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -60,14 +60,20 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import arrow.core.getOrElse
 import com.lightspark.composeqr.DotShape
 import com.lightspark.composeqr.QrCodeColors
 import com.lightspark.composeqr.QrCodeView
 import com.walletka.app.R
+import com.walletka.app.dto.Amount
 import com.walletka.app.ui.AmountInputMask
+import com.walletka.app.usecases.blockchain.GetBlockchainAddressUseCase
+import com.walletka.app.usecases.lightning.GetBolt11InvoiceUseCase
 import com.walletka.app.usecases.lsp.GetMyLnUrlUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -134,8 +140,8 @@ fun CreateInvoiceScreen(
                 Column {
                     when (tabIndex) {
                         0 -> InvoiceView(invoice = lnUrl ?: "")
-                        1 -> InvoiceView(invoice = "lightningInvoice")
-                        2 -> InvoiceView(invoice = "blockchainInvoice")
+                        1 -> InvoiceView(invoice = viewModel.bolt11Invoice)
+                        2 -> InvoiceView(invoice = viewModel.blockchainAddress)
                     }
                 }
             }
@@ -147,8 +153,8 @@ fun CreateInvoiceScreen(
                             AnnotatedString(
                                 when (pageState.currentPage) {
                                     0 -> lnUrl ?: "Error getting lnurl"
-                                    1 -> "lightningInvoice"
-                                    2 -> "blockchainInvoice"
+                                    1 -> viewModel.bolt11Invoice
+                                    2 -> viewModel.blockchainAddress
                                     else -> "Undefined"
                                 }
                             )
@@ -171,8 +177,8 @@ fun CreateInvoiceScreen(
                             putExtra(
                                 Intent.EXTRA_TEXT, when (pageState.currentPage) {
                                     0 -> lnUrl
-                                    1 -> "lightningInvoice"
-                                    2 -> "blockchainInvoice"
+                                    1 -> viewModel.bolt11Invoice
+                                    2 -> viewModel.blockchainAddress
                                     else -> "Undefined"
                                 }
                             )
@@ -210,6 +216,7 @@ fun CreateInvoiceScreen(
                 visualTransformation = AmountInputMask(),
                 onValueChange = {
                     viewModel.setAmount(it)
+                    viewModel.refreshBolt11Url()
                 })
 
             Spacer(Modifier.height(5.dp))
@@ -218,7 +225,7 @@ fun CreateInvoiceScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 label = { Text("Description") },
                 value = "",
-                onValueChange = {  })
+                onValueChange = { })
         }
     }
 }
@@ -250,10 +257,10 @@ fun InvoiceView(invoice: String, modifier: Modifier = Modifier) {
                         .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     BasicText(
-                        text = "Walletka",
+                        text = stringResource(id = R.string.app_name),
                         style = TextStyle.Default.copy(
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontSize = 12.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.ExtraBold,
                             fontStyle = FontStyle.Italic,
                             fontFamily = FontFamily.Serif
@@ -273,15 +280,17 @@ fun PreviewCreateInvoiceScreen() {
 
 @HiltViewModel
 class CreateInvoiceViewModel @Inject constructor(
-    private val getMyLnUrl: GetMyLnUrlUseCase
-): ViewModel() {
+    private val getMyLnUrl: GetMyLnUrlUseCase,
+    private val getBlockchainAddress: GetBlockchainAddressUseCase,
+    private val getBolt11Invoice: GetBolt11InvoiceUseCase
+) : ViewModel() {
 
     private var _amountSat = MutableStateFlow("")
     val amountSat = _amountSat.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     var lnUrl = amountSat.mapLatest {
-        var amount: ULong? =amountSat.value.toULongOrNull()
+        var amount: ULong? = amountSat.value.toULongOrNull()
 
         if (amount != null) {
             amount *= 1000u
@@ -290,8 +299,26 @@ class CreateInvoiceViewModel @Inject constructor(
         getMyLnUrl(amount)
     }
 
+    var blockchainAddress by mutableStateOf("Unknown")
+    var bolt11Invoice by mutableStateOf("Unknown")
+
+    init {
+        viewModelScope.launch {
+            blockchainAddress = getBlockchainAddress().getOrElse { "Unknown" }
+        }
+        refreshBolt11Url()
+    }
+
     fun setAmount(value: String) {
         _amountSat.value = value
+    }
+
+    fun refreshBolt11Url() {
+        viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.Main) {
+                bolt11Invoice = getBolt11Invoice(Amount.fromSats(amountSat.value.toULongOrNull() ?: 0u)).getOrElse { "Error" }
+            }
+        }
     }
 
 }

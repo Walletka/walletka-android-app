@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.ContactListItemDto
 import com.walletka.app.usecases.SendEncryptedMessageUseCase
 import com.walletka.app.usecases.cashu.GetCashuTokensUseCase
@@ -30,6 +31,7 @@ class SendCashuTokenViewModel @Inject constructor(
 
     var step by mutableStateOf(SendCashuTokenScreenStep.Form)
     var amount by mutableStateOf("")
+    var memo by mutableStateOf("")
     var tokenToSend: String? by mutableStateOf(null)
     var banks: Map<String, ULong> by mutableStateOf(mapOf())
     var selectedMint: String? by mutableStateOf(null)
@@ -62,7 +64,7 @@ class SendCashuTokenViewModel @Inject constructor(
     fun sendTokens() {
         amount.toBigDecimalOrNull()?.let {
             viewModelScope.launch(Dispatchers.IO) {
-                sendCashuToken(selectedMint!!, amount.toULong()).fold(
+                sendCashuToken(selectedMint!!, Amount.fromSats(amount.toULong()), memo).fold(
                     {
                         error = it.innerMessage
                     },

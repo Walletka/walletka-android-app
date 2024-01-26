@@ -15,13 +15,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.walletka.app.dto.TransactionListItemDto
+import com.walletka.app.enums.WalletLayer
 import com.walletka.app.ui.components.TransactionList
 import com.walletka.app.usecases.GetTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,8 +39,14 @@ import javax.inject.Inject
 @Composable
 fun TransactionListPage(
     navController: NavController,
+    layer: WalletLayer,
     viewModel: TransactionListPageViewModel = hiltViewModel()
 ) {
+
+    LaunchedEffect(key1 = "setLayer") {
+        viewModel.selectedLayer = layer
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,7 +68,12 @@ fun TransactionListPage(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            TransactionList(transactions = viewModel.transactions)
+            TransactionList(
+                transactions = viewModel.transactions,
+                onItemClick = {
+                    navController.navigate("transaction/${it.walletLayer.name}/${it.id}")
+                }
+            )
         }
     }
 }
@@ -65,16 +81,21 @@ fun TransactionListPage(
 @HiltViewModel
 class TransactionListPageViewModel @Inject constructor(
     private val getTransactions: GetTransactionsUseCase
-): ViewModel() {
+) : ViewModel() {
 
     var transactions = mutableStateListOf<TransactionListItemDto>()
+    var selectedLayer by mutableStateOf(WalletLayer.All)
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             getTransactions(GetTransactionsUseCase.Params()).collect {
                 viewModelScope.launch(Dispatchers.Main) {
                     transactions.clear()
-                    transactions.addAll(it)
+                    transactions.addAll(it.filter {
+                        if (selectedLayer != WalletLayer.All)
+                            it.walletLayer == selectedLayer
+                        else true
+                    }.sortedByDescending { it.time })
                 }
             }
         }

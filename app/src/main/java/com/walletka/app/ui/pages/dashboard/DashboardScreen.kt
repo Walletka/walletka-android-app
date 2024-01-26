@@ -21,15 +21,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionListItemDto
+import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.WalletLayer
 import com.walletka.app.ui.components.MainFloatingActionButton
 import com.walletka.app.ui.components.TransactionList
 import com.walletka.app.ui.components.WalletLayerActions
 import com.walletka.app.usecases.GetBalancesUseCase
+import com.walletka.app.usecases.GetConnectionStatusUseCase
 import com.walletka.app.usecases.GetTransactionsUseCase
+import com.walletka.app.usecases.WalletkaConnectionStatusDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -65,22 +71,33 @@ fun DashboardScreen(
         ) {
             DashboardHeader(
                 navController,
-                balance = viewModel.balances[viewModel.activeLayer] ?: 0u,
+                balance = viewModel.balances[viewModel.activeLayer] ?: WalletBalanceDto.CombinedWalletsBalance(Amount.fromSats(0u)),
                 viewModel.activeLayer,
                 onLayerSelected = { layer ->
                     viewModel.activeLayer = layer
-                })
+                },
+                connectionStatus = viewModel.connectionStatusDto.status()
+            )
             WalletLayerActions(navController = navController, layer = viewModel.activeLayer)
             Box() {
                 if (viewModel.transactions.isNotEmpty()) {
                     TransactionList(
-                        transactions = viewModel.transactions,
+                        transactions = viewModel.transactions.filter {
+                            if (viewModel.activeLayer == WalletLayer.All) true else it.walletLayer == viewModel.activeLayer
+                        },
                         limit = 3,
+                        onItemClick = {
+                            navController.navigate("transaction/${it.walletLayer.name}/${it.id}")
+                        },
                         onMoreClick = {
-                            navController.navigate("transactions")
+                            navController.navigate("transactions/${viewModel.activeLayer.name}")
                         })
                 } else {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().padding(32.dp)) {
+                    Box(
+                        contentAlignment = Alignment.Center, modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp)
+                    ) {
                         Text(text = "There are no transactions yet")
                     }
                 }
@@ -92,34 +109,39 @@ fun DashboardScreen(
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getTransactions: GetTransactionsUseCase,
-    private val getBalancesUseCase: GetBalancesUseCase
+    private val getBalancesUseCase: GetBalancesUseCase,
+    private val getConnectionStatus: GetConnectionStatusUseCase
 ) : ViewModel() {
 
     val transactions = mutableStateListOf<TransactionListItemDto>()
-    var activeLayer by mutableStateOf(WalletLayer.Cashu)
-    var balances by mutableStateOf<Map<WalletLayer, ULong>>(mapOf())
+    var activeLayer by mutableStateOf(WalletLayer.All)
+    var balances by mutableStateOf<Map<WalletLayer, WalletBalanceDto>>(mapOf())
+    var connectionStatusDto by mutableStateOf<WalletkaConnectionStatusDto>(
+        WalletkaConnectionStatusDto(
+            internetConnected = false,
+            lspConnected = false
+        )
+    )
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             getTransactions(GetTransactionsUseCase.Params()).collect {
                 viewModelScope.launch(Dispatchers.Main) {
                     transactions.clear()
-                    transactions.addAll(it)
+                    transactions.addAll(it.sortedByDescending { it.time })
                 }
             }
         }
         viewModelScope.launch(Dispatchers.IO) {
             getBalancesUseCase(GetBalancesUseCase.Params()).collect {
                 viewModelScope.launch(Dispatchers.Main) {
-                    val m = mutableMapOf<WalletLayer, ULong>()
-                    m[WalletLayer.Blockchain] = it.onchainBalanceSat
-                    m[WalletLayer.Lightning] = it.lightningBalanceMSat
-                    m[WalletLayer.Cashu] = it.cashuBalanceSat
-                    m[WalletLayer.All] =
-                        it.onchainBalanceSat + (it.lightningBalanceMSat / 1000u) + it.cashuBalanceSat
-
-                    balances = m
+                    balances = it
                 }
+            }
+        }
+        viewModelScope.launch {
+            getConnectionStatus().collect {
+                connectionStatusDto = it
             }
         }
     }

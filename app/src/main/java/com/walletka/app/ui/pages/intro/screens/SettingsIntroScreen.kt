@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletka.app.usecases.GetNpubUseCase
 import com.walletka.app.usecases.lsp.SignUpToLspUseCase
+import com.walletka.app.wallet.LightningNodeFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -81,10 +82,11 @@ fun SettingsIntroScreen(
 }
 
 @HiltViewModel
-class  SettingsIntroViewModel @Inject constructor(
+class SettingsIntroViewModel @Inject constructor(
     private val signUpToLsp: SignUpToLspUseCase,
-    private val getNpubUseCase: GetNpubUseCase
-): ViewModel() {
+    private val getNpubUseCase: GetNpubUseCase,
+    private val lightningNodeFactory: LightningNodeFactory
+) : ViewModel() {
 
     var alias: String? by mutableStateOf(null)
     var error: String? by mutableStateOf(null)
@@ -92,10 +94,11 @@ class  SettingsIntroViewModel @Inject constructor(
     fun signup() {
         viewModelScope.launch {
             val npub = getNpubUseCase().orNull()
+            val nodePubKey = getLightningNodePubKey()
             if (npub == null) {
                 error = "Can't get npub!"
             } else {
-                signUpToLsp(SignUpToLspUseCase.Params(npub, null)).fold(
+                signUpToLsp(SignUpToLspUseCase.Params(npub, nodePubKey)).fold(
                     {
                         error = it.innerMessage
                     },
@@ -105,6 +108,11 @@ class  SettingsIntroViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun getLightningNodePubKey(): String {
+        val node = lightningNodeFactory.getNode(silent = true)
+        return node.nodeId()
     }
 
 }
