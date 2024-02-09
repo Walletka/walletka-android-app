@@ -109,11 +109,11 @@ fun HomePage(
                     Text(
                         text = stringResource(id = R.string.app_name),
                         fontSize = 25.sp,
-                        style = TextStyle(
-                            brush = Brush.linearGradient(
-                                colors = sampleGradientColors
-                            )
-                        )
+                        //style = TextStyle(
+                        //    brush = Brush.linearGradient(
+                        //        colors = sampleGradientColors
+                        //    )
+                        //)
                     )
                 },
                 actions = {

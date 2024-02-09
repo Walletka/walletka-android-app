@@ -6,16 +6,12 @@ import arrow.core.Option
 import arrow.core.Some
 import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionDetailDto
-import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
 import com.walletka.app.enums.WalletLayer
 import com.walletka.app.io.repository.LdkRepository
 import com.walletka.app.wallet.BlockchainWallet
 import com.walletka.app.wallet.CashuWallet
-import com.walletka.app.wallet.LightningWallet
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDateTime

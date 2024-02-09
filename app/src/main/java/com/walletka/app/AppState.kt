@@ -16,4 +16,5 @@ class AppState @Inject constructor() {
     val lspBaseUrl = "https://lsp.tchaicash.space/api/lsp/"
     val lspPeerId = "038129f42d46199c0c6c59577c3d81b54925629c2841e1fb74889266c6fcb25399"
     val lspPeerAddress = "130.61.74.161:9876"
+    val nip05domain = "tchaicash.space"
 }

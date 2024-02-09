@@ -3,6 +3,7 @@ package com.walletka.app.io.client
 import android.content.SharedPreferences
 import android.util.Log
 import arrow.core.getOrElse
+import com.walletka.app.AppState
 import com.walletka.app.di.MnemonicSeedProvider
 import com.walletka.app.usecases.GetMnemonicSeedUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -34,7 +35,8 @@ import kotlin.coroutines.CoroutineContext
 @Singleton
 class NostrClient @Inject constructor(
     private val mnemonicSeedProvider: MnemonicSeedProvider,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val appState: AppState
 ) : CoroutineScope {
     private val keys by lazy {
         val mnemonic = mnemonicSeedProvider.get() ?: throw Exception("Missing mnemonic key!!!")
@@ -84,6 +86,7 @@ class NostrClient @Inject constructor(
             val metadata = nostr_sdk.Metadata()
                 .setName(alias ?: "Walletka user")
                 .setDisplayName(alias ?: "Walletka user")
+                .setNip05("$alias@${appState.nip05domain}")
 
             // Update metadata
             client.setMetadata(metadata)
