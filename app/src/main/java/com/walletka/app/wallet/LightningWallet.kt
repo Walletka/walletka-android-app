@@ -194,7 +194,7 @@ class LightningWallet @Inject constructor(
                         node.listChannels().firstOrNull { it.channelId == event.channelId }?.let { channel ->
                             ldkRepository.saveTransaction(
                                 false,
-                                Amount.fromMsat(channel.outboundCapacityMsat).sats().toLong(),
+                                Amount.fromSats(channel.outboundCapacityMsat).sats().toLong(),
                                 "Open channel",
                                 LocalDateTime.now().toEpochSecond(ZoneOffset.UTC).toULong()
                             )
@@ -205,7 +205,7 @@ class LightningWallet @Inject constructor(
                         node.listChannels().firstOrNull { it.channelId == event.channelId }?.let { channel ->
                             ldkRepository.saveTransaction(
                                 true,
-                                Amount.fromMsat(channel.outboundCapacityMsat).sats().toLong(),
+                                Amount.fromSats(channel.outboundCapacityMsat).sats().toLong(),
                                 "Close channel",
                                 LocalDateTime.now().toEpochSecond(ZoneOffset.UTC).toULong()
                             )
