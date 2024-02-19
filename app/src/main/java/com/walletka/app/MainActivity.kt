@@ -31,6 +31,7 @@ import com.walletka.app.ui.pages.transfers.TransactionDetailPage
 import com.walletka.app.ui.pages.transfers.TransactionListPage
 import com.walletka.app.ui.pages.wallet.BlockchainUtxosPage
 import com.walletka.app.ui.pages.wallet.CashuNutsPage
+import com.walletka.app.ui.pages.wallet.LightningChannelDetailPage
 import com.walletka.app.ui.pages.wallet.LightningChannelsPage
 import com.walletka.app.ui.pages.wallet.OpenLightningChannelPage
 import com.walletka.app.ui.pages.wallet.WalletInfoPage
@@ -156,7 +157,12 @@ class MainActivity : ComponentActivity() {
                         composable("lightningChannels") {
                             LightningChannelsPage(navController = navController)
                         }
-                        composable("openLightningChannel"){
+                        composable("lightningChannelDetails/{channelId}") {
+                            val channelId = it.arguments?.getString("channelId")!!
+
+                            LightningChannelDetailPage(channelId = channelId, navController = navController)
+                        }
+                        composable("openLightningChannel") {
                             OpenLightningChannelPage(navController = navController)
                         }
                     }

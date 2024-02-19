@@ -108,7 +108,9 @@ fun LightningChannelsPage(
                 .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
-            LightningChannelList(channels = vieModel.channels)
+            LightningChannelList(channels = vieModel.channels) {
+                navController.navigate("lightningChannelDetails/${it.channelId}")
+            }
         }
     }
 }

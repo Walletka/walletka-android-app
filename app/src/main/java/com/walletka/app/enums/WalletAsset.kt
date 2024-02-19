@@ -5,11 +5,11 @@ enum class WalletLayer {
 
     companion object {
         fun byNameIgnoreCaseOrNull(input: String): WalletLayer? {
-            return WalletLayer.values().firstOrNull { it.name.equals(input, true) }
+            return entries.firstOrNull { it.name.equals(input, true) }
         }
 
         fun fromOrdinal(ordinal: Int): WalletLayer? {
-            return WalletLayer.values().getOrNull(ordinal)
+            return entries.getOrNull(ordinal)
         }
     }
 }
