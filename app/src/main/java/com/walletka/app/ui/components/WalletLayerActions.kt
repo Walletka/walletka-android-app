@@ -82,6 +82,15 @@ fun WalletLayerActions(
                 }
             }
 
+            WalletLayer.RGB -> {
+                WalletLayerActionButton("Assets", imageVector = Icons.Default.Menu) {
+                    navController.navigate("rgbAssets")
+                }
+                WalletLayerActionButton("UTXOs", imageVector = Icons.Default.Menu) {
+                    navController.navigate("rgbUtxoList")
+                }
+            }
+
             WalletLayer.All -> {
 
             }

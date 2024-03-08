@@ -45,6 +45,18 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
         if (URLUtil.isValidUrl(input)) {
             return QrCodeResultDto.Url(input)
         }
+//rgb:~/~/utxob:R3Cdz9R-VLYgy3kHc-xnBHjDBGz-951RdnoBj-W5Nt8C1CM-LNxsSn?expiry=1708551767&endpoints=rpcs://proxy.iriswallet.com/0.2/json-rpc
+
+        if (input.startsWith("rgb:~")) {
+            val utxob = input.substring(0, input.indexOfFirst { it == '?' }).removePrefix("rgb:~/~/utxob:")
+            val parameters = input.split('&').map {
+                val parts = it.split('=')
+                val name = parts.firstOrNull() ?: ""
+                val value = parts.drop(1).firstOrNull() ?: ""
+                Pair(name, value)
+            }.associate { Pair(it.first, it.second) }
+            return QrCodeResultDto.RgbInvoice(utxob, parameters["expiry"]?.toULong() ?: 0u, parameters["endpoints"] ?: "")
+        }
 
         try {
             Address(input)

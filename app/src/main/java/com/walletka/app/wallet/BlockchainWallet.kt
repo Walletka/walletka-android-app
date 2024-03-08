@@ -26,6 +26,7 @@ import org.bitcoindevkit.DatabaseConfig
 import org.bitcoindevkit.DerivationPath
 import org.bitcoindevkit.Descriptor
 import org.bitcoindevkit.DescriptorSecretKey
+import org.bitcoindevkit.ElectrumConfig
 import org.bitcoindevkit.EsploraConfig
 import org.bitcoindevkit.LocalUtxo
 import org.bitcoindevkit.Mnemonic
@@ -70,13 +71,14 @@ class BlockchainWallet @Inject constructor(
 
     private val blockchain: Blockchain by lazy {
         Blockchain(
-            BlockchainConfig.Esplora(
-                EsploraConfig(
-                    appState.esploraFullUrl,
+            BlockchainConfig.Electrum(
+                ElectrumConfig(
+                    appState.electrumUrl,
                     null,
-                    null,
-                    10u,
-                    500u
+                    3u,
+                    20u,
+                    500u,
+                    false
                 )
             )
         )

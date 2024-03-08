@@ -12,5 +12,6 @@ sealed class WalletkaError(val innerMessage: String) {
     class CantClaimCashuToken(msg: String? = null): WalletkaError(msg ?: "Can't claim Cahu token")
     class CantOpenLightningChannel(msg: String? = null): WalletkaError(msg ?: "Can't open lightning channel")
     class CantCloseLightningChannel(msg: String? = null): WalletkaError(msg ?: "Can't close lightning channel")
+    class CantCreateRgbInvoice(msg: String? = null): WalletkaError(msg ?: "Cant create RGB invoice")
 }
 

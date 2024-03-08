@@ -99,7 +99,8 @@ class PayInvoiceViewModel @Inject constructor(
                 DestinationType.LightningInvoice -> {
                     try {
                         val bolt11Invoice = Bolt11Invoice(input)
-                        isAmountMutable = bolt11Invoice.amount() == null
+                        isAmountMutable =
+                            bolt11Invoice.amount() == null || bolt11Invoice.amount()?.toSat() == 0uL
                         Log.i("PayVM", "Amount is mutable: $isAmountMutable")
 
                         this.amountSat =

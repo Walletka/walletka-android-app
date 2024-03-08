@@ -36,7 +36,7 @@ fun TransactionList(
 
     LazyColumn() {
         items(itemsToShow, key = { transactions[it].id }) {
-            Surface(modifier = Modifier.clickable {
+            Box(modifier = Modifier.clickable {
                 onItemClick(transactions[it])
             }) {
                 TransactionListItem(Modifier.animateItemPlacement(), transaction = transactions[it])

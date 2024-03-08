@@ -27,6 +27,7 @@ import com.walletka.app.ui.pages.transfers.PayInvoicePage
 import com.walletka.app.ui.pages.transfers.PayInvoiceResultPage
 import com.walletka.app.ui.pages.transfers.PaymentReceivedPage
 import com.walletka.app.ui.pages.transfers.SendCashuTokenPage
+import com.walletka.app.ui.pages.transfers.SendRgbAssetPage
 import com.walletka.app.ui.pages.transfers.TransactionDetailPage
 import com.walletka.app.ui.pages.transfers.TransactionListPage
 import com.walletka.app.ui.pages.wallet.BlockchainUtxosPage
@@ -34,6 +35,9 @@ import com.walletka.app.ui.pages.wallet.CashuNutsPage
 import com.walletka.app.ui.pages.wallet.LightningChannelDetailPage
 import com.walletka.app.ui.pages.wallet.LightningChannelsPage
 import com.walletka.app.ui.pages.wallet.OpenLightningChannelPage
+import com.walletka.app.ui.pages.wallet.RgbAssetDetailPage
+import com.walletka.app.ui.pages.wallet.RgbAssetsPage
+import com.walletka.app.ui.pages.wallet.RgbUtxosPage
 import com.walletka.app.ui.pages.wallet.WalletInfoPage
 import com.walletka.app.ui.theme.WalletkaTheme
 import com.walletka.app.usecases.StartWalletkaServicesUseCase
@@ -164,6 +168,22 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("openLightningChannel") {
                             OpenLightningChannelPage(navController = navController)
+                        }
+                        composable("sendRgbAsset?utxob={utxob}") {
+                            val utxob = it.arguments?.getString("utxob")
+
+                            SendRgbAssetPage(navController = navController, utxob = utxob)
+                        }
+                        composable("rgbAssets") {
+                            RgbAssetsPage(navController = navController)
+                        }
+                        composable("rgbAsset/{assetId}") {
+                            val assetId = it.arguments?.getString("assetId")!!
+
+                            RgbAssetDetailPage(navController = navController, assetId = assetId)
+                        }
+                        composable("rgbUtxoList") {
+                            RgbUtxosPage(navController = navController)
                         }
                     }
                 }
