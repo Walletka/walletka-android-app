@@ -109,13 +109,20 @@ fun LightningChannelDetailPage(
             viewModel.channel?.let { channel ->
                 Column {
                     Text(text = "Peer: ${channel.counterpartyNodeId}")
-                    Text(text = "Balance: ${channel.balanceMsat / 1000u} sats")
+                    Text(text = "Balance: ${channel.channelValueSats - (channel.outboundCapacityMsat / 1000u)} sats")
                     Text(text = "Inbound: ${channel.inboundCapacityMsat / 1000u} sats")
                     Text(text = "Outbound: ${channel.outboundCapacityMsat / 1000u} sats")
                     Text(text = "Fee rate: ${channel.feerateSatPer1000Weight} sat per 1000Weight")
                     Text(text = "Is outbound: ${channel.isOutbound}")
                     Text(text = "Is usable: ${channel.isUsable}")
                     Text(text = "Unspendable reserve: ${channel.unspendablePunishmentReserve} sats")
+                    Text(text = "Counterparty unspendable reserve: ${channel.counterpartyUnspendablePunishmentReserve} sats")
+                    Text(text = "Counterparty outbound HTLC minimum: ${channel.counterpartyOutboundHtlcMinimumMsat} Msats")
+                    Text(text = "Counterparty outbound HTLC maximum: ${channel.counterpartyOutboundHtlcMaximumMsat} Msats")
+                    Text(text = "Inbound HTLC minimum: ${channel.inboundHtlcMinimumMsat} Msats")
+                    Text(text = "Inbound HTLC maximum: ${channel.inboundHtlcMaximumMsat} Msats")
+                    Text(text = "Counterparty forwarding fee base: ${channel.counterpartyForwardingInfoFeeBaseMsat} Msats")
+                    Text(text = "CLTV expiry delta: ${channel.cltvExpiryDelta} sats")
                     LinearProgressIndicator(
                         progress = {
                             getChannelProgressState(
@@ -148,7 +155,7 @@ class LightningChannelDetailViewModel @Inject constructor(
     fun closeChannel() {
         channel?.let {
             viewModelScope.launch {
-                closeChannelUC(it.channelId)
+                closeChannelUC(channel!!.channelId)
             }
         }
     }

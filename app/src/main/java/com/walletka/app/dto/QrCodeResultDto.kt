@@ -8,4 +8,5 @@ sealed class QrCodeResultDto {
     data class Url(val url: String): QrCodeResultDto()
     data class EmailAddress(val emailAddress: String): QrCodeResultDto()
     data class Npub(val npub: String): QrCodeResultDto()
+    data class RgbInvoice(val utxob: String, val expiry: ULong, val endpoint: String): QrCodeResultDto()
 }

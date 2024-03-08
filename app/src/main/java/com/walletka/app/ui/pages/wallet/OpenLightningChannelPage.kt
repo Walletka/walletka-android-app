@@ -2,6 +2,7 @@ package com.walletka.app.ui.pages.wallet
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -126,6 +128,11 @@ fun OpenLightningChannelPage(
                         modifier = Modifier
                             .fillMaxWidth()
                     )
+
+                    Row {
+                        Checkbox(checked = viewModel.public, onCheckedChange = { viewModel.public = it } )
+                        Text(text = "Public")
+                    }
 
                     ElevatedButton(onClick = { viewModel.setLspNode() }) {
                         Text(text = "Lsp")

@@ -1,5 +1,7 @@
 package com.walletka.app.ui.pages.transfers
 
+import android.transition.Explode
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,9 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,13 +31,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.walletka.app.AppState
 import com.walletka.app.R
 import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionDetailDto
@@ -90,9 +103,10 @@ fun TransactionDetailPage(
                     CommonTransactionDetails(tx = tx)
                     if (tx is TransactionDetailDto.BlockchainTransactionDetailDto) {
                         BlockchainTransactionDetails(tx = tx)
+                        TransactionDetailExplorerLink(txId = tx.id, viewModel.getExplorerUrl(tx.id))
                     }
 
-                    if (tx.primaryText.isNotEmpty()){
+                    if (tx.primaryText.isNotEmpty()) {
                         TransactionDetailDescription(description = tx.primaryText)
                     }
 
@@ -101,6 +115,11 @@ fun TransactionDetailPage(
                             TransactionDetailSecret(secret = it)
                         }
                     }
+
+                    if (tx is TransactionDetailDto.RgbTransactionDetailDto) {
+                        TransactionDetailExplorerLink(txId = tx.id, viewModel.getExplorerUrl(tx.id))
+                    }
+
                 }
             }
         }
@@ -143,7 +162,7 @@ fun CommonTransactionDetails(tx: TransactionDetailDto) {
     ) {
         TransactionDetailsInfoItem(title = "Wallet", value = tx.walletLayer.name)
         TransactionDetailsInfoItem(title = "Confirmed", value = tx.confirmed.toString())
-        TransactionDetailsInfoItem(title = "Fee", value = "${tx.fee?.sats() ?:0} sats")
+        TransactionDetailsInfoItem(title = "Fee", value = "${tx.fee?.sats() ?: 0} sats")
     }
 }
 
@@ -190,6 +209,43 @@ fun TransactionDetailDescription(description: String) {
         Column(Modifier.padding(8.dp)) {
             Text(text = "Description", style = MaterialTheme.typography.labelLarge)
             Text(text = description)
+        }
+    }
+}
+
+@Composable
+fun TransactionDetailExplorerLink(txId: String, url: String) {
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+    ) {
+        Column(Modifier.padding(8.dp)) {
+            Text(text = "Explorer", style = MaterialTheme.typography.labelLarge)
+            SelectionContainer {
+                val annotatedString = buildAnnotatedString {
+                    withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline, color = Color.Blue)) {
+                        append(txId)
+                        addStringAnnotation(
+                            tag = "URL",
+                            annotation = url,
+                            start = 0,
+                            end = length
+                        )
+                    }
+                }
+                val uriHandler = LocalUriHandler.current
+                ClickableText(
+                    text = annotatedString,
+                    overflow = TextOverflow.Clip,
+                    onClick = { offset ->
+                        annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                            .firstOrNull()?.let { annotation ->
+                                uriHandler.openUri(annotation.item)
+                            }
+                    }
+                )
+            }
         }
     }
 }
@@ -254,7 +310,8 @@ fun PreviewTransactionDetailPage() {
 
 @HiltViewModel
 class TransactionDetailViewModel @Inject constructor(
-    private val getTransaction: GetTransactionUseCase
+    private val getTransaction: GetTransactionUseCase,
+    private val appState: AppState
 ) : ViewModel() {
 
     var transactionDetail by mutableStateOf<TransactionDetailDto?>(null)
@@ -263,6 +320,10 @@ class TransactionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             transactionDetail = getTransaction(GetTransactionUseCase.GetTransactionParams(layer, txId)).orNull()
         }
+    }
+
+    fun getExplorerUrl(txId: String): String {
+        return appState.explorerUrl + txId
     }
 
 }

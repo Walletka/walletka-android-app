@@ -23,7 +23,7 @@ fun BalanceText(
     amount: Amount,
     fontSize: TextUnit = 45.sp,
     animate: Boolean = false,
-    animationDuration: Int = 1300
+    animationDuration: Int = 1300,
 ) {
     Row(
         modifier = modifier
@@ -37,7 +37,7 @@ fun BalanceText(
             ), label = "balance_animator"
         )
 
-        val balanceText = Amount.fromSats(balanceCounter.toULong()).btc().toPlainString()
+        val balanceText = Amount.fromSats(balanceCounter.toULong(), decimals = amount.decimals).btc().toPlainString()
         var offset = balanceText.indexOfFirst { !(it == '0' || it == '.' || it == ',') }
 
         if (offset == -1) {
@@ -81,7 +81,8 @@ fun BalanceText(
                         }
                     }
                     withStyle(style = SpanStyle(fontSize = fontSize)) {
-                        append(0x20BF.toChar())
+                        append(" ")
+                        append(amount.symbol)
                     }
                 } catch (e: Exception) {
                     append("Err")

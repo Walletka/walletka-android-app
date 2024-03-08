@@ -42,14 +42,17 @@ class LightningNodeFactory @Inject constructor(
             storageDirPath = dataDir.absolutePath,
             network = Network.REGTEST,
             //listeningAddress = "0.0.0.0:${appState.ldkPort}",
-            defaultCltvExpiryDelta = 144u,
+            defaultCltvExpiryDelta = 12u,
             onchainWalletSyncIntervalSecs = 60u,
             walletSyncIntervalSecs = 30u,
             feeRateCacheUpdateIntervalSecs = 600u,
             logLevel = LogLevel.DEBUG,
+            listeningAddresses = listOf("0.0.0.0:${appState.ldkPort}"),
+            logDirPath = null,
+            probingLiquidityLimitMultiplier = 3u,
             trustedPeers0conf = listOf(
                 appState.lspPeerId
-            )
+            ),
         )
     }
 
@@ -64,6 +67,7 @@ class LightningNodeFactory @Inject constructor(
             mnemonicSeedProvider.get()!!,
             ""
         )
+        builder.setLiquiditySourceLsps2(appState.lspPeerAddress, appState.lspPeerId, null)
         builder.setEsploraServer(appState.esploraFullUrl)
 
         val node = builder.build()

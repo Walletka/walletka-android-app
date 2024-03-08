@@ -48,6 +48,10 @@ fun getQrCodeResultRoute(result: QrCodeResultDto): String? {
             Log.i("QrCodeScanner", "Found Npub ${result.npub}")
             return "pay?destination=${result.npub}"
         }
+        is QrCodeResultDto.RgbInvoice -> {
+            Log.i("QrCodeScanner", "Found RGB invoice ${result.utxob}")
+            return "sendRgbAsset?utxob=${result.utxob}"
+        }
     }
     return null
 }

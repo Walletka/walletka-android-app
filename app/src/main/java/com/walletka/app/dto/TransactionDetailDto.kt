@@ -55,4 +55,15 @@ sealed class TransactionDetailDto {
         val secret: String?
     ) : TransactionDetailDto()
 
+    data class RgbTransactionDetailDto(
+        override val id: String,
+        override val direction: TransactionDirection,
+        override val amount: Amount,
+        override val primaryText: String,
+        override val secondaryText: String,
+        override val time: LocalDateTime,
+        override val walletLayer: WalletLayer,
+        override val confirmed: Boolean,
+        override val fee: Amount?,
+    ): TransactionDetailDto()
 }

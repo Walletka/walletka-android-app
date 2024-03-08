@@ -41,10 +41,9 @@ class CashuWallet @Inject constructor(
     val tokensFlow = cashuRepository.tokens
     val transactionsFlow = cashuRepository.transactions
 
-    suspend fun start() {
-        getUnreadMessagesFromNostr()
-
+    fun start() {
         launch {
+            getUnreadMessagesFromNostr()
             nostrSubscribe()
         }
     }

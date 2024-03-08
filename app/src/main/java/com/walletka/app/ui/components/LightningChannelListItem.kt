@@ -21,7 +21,7 @@ fun LightningChannelListItem(channel: ChannelDetails) {
                 )
             ) {
                 Text(text = "Peer: ${channel.counterpartyNodeId}")
-                Text(text = "Balance: ${channel.balanceMsat / 1000u} sats")
+                Text(text = "Balance: ${channel.channelValueSats - (channel.outboundCapacityMsat / 1000u)} sats")
                 Text(text = "Inbound: ${channel.inboundCapacityMsat / 1000u} sats")
                 Text(text = "Outbound: ${channel.outboundCapacityMsat / 1000u} sats")
                 Text(text = "Fee rate: ${channel.feerateSatPer1000Weight} sat per 1000Weight")

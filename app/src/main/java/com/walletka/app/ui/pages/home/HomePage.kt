@@ -50,6 +50,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.walletka.app.R
 import com.walletka.app.dto.QrCodeResultDto
+import com.walletka.app.ui.pages.RgbPage
 import com.walletka.app.ui.pages.contacts.ContactsPage
 import com.walletka.app.ui.pages.dashboard.DashboardScreen
 import com.walletka.app.ui.pages.scanner.getQrCodeResultRoute
@@ -70,7 +71,7 @@ fun HomePage(
     val scope = rememberCoroutineScope()
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
-    val tabs = listOf("Home", "Contacts")
+    val tabs = listOf("Home", "RGB", "Contacts")
     val pageState = rememberPagerState {
         tabs.size
     }
@@ -192,7 +193,9 @@ fun HomePage(
                         onPayClick = { showBottomSheet = true }
                     )
 
-                    1 -> ContactsPage(navController)
+                    1 -> RgbPage(navController)
+
+                    2 -> ContactsPage(navController)
                 }
             }
         }

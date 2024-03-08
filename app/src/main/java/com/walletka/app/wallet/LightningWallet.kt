@@ -72,10 +72,12 @@ class LightningWallet @Inject constructor(
         description: String = "",
         expiration: UInt = 86_400u
     ): Bolt11Invoice {
-        if (amount == null) {
+        if (amount == null || amount == 0uL) {
+            // return node.receiveVariableAmountPaymentViaJitChannel(description, expiration, 1000u) //Todo limit
+            return node.receiveVariableAmountPaymentWithPaths(description, expiration, channels.value.map { it.channelId })
             return node.receiveVariableAmountPayment(description, expiration)
         }
-        return node.receivePayment(amount, description, expiration)
+        return node.receivePaymentWithPaths(amount, description, expiration, channels.value.map { it.channelId })
     }
 
     suspend fun openChannel(
@@ -200,6 +202,7 @@ class LightningWallet @Inject constructor(
                             )
                         }
                     }
+
                     is Event.ChannelClosed -> {
                         Log.i(TAG, "Channel closed")
                         node.listChannels().firstOrNull { it.channelId == event.channelId }?.let { channel ->
@@ -211,6 +214,7 @@ class LightningWallet @Inject constructor(
                             )
                         }
                     }
+
                     else -> {
                         Log.d(TAG, "Unexpected event $event")
                     }

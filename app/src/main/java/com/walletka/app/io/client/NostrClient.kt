@@ -67,7 +67,7 @@ class NostrClient @Inject constructor(
     val messagesFlow = MutableStateFlow<Pair<Event, String>?>(null)
 
 
-    fun start() {
+    suspend fun start() = withContext(Dispatchers.IO) {
         client.addRelay("wss://nostr.tchaicap.space")
         client.addRelay("wss://nostr.oxtr.dev")
 

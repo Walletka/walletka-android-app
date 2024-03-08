@@ -1,14 +1,18 @@
 package com.walletka.app.usecases
 
+import arrow.core.padZip
 import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionListItemDto
 import com.walletka.app.enums.TransactionDirection
 import com.walletka.app.enums.WalletLayer
+import com.walletka.app.ui.components.TransactionListItem
 import com.walletka.app.wallet.BlockchainWallet
 import com.walletka.app.wallet.CashuWallet
 import com.walletka.app.wallet.LightningWallet
+import com.walletka.app.wallet.RgbWallet
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import org.rgbtools.TransferKind
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -18,7 +22,8 @@ import javax.inject.Inject
 class GetTransactionsUseCase @Inject constructor(
     private val blockchainWallet: BlockchainWallet,
     private val lightningWallet: LightningWallet,
-    private val cashuWallet: CashuWallet
+    private val cashuWallet: CashuWallet,
+    private val rgbWallet: RgbWallet
 ) {
 
     suspend operator fun invoke(params: Params): kotlinx.coroutines.flow.Flow<List<TransactionListItemDto>> {
@@ -83,7 +88,22 @@ class GetTransactionsUseCase @Inject constructor(
             }
         }
 
-        return combine(blockchainTransactions, lightningTransactions, cashuTransactions) { b, l, c -> b + l + c }
+        val rgbTransactions = rgbWallet.rgbAssets.map {
+            it.flatMap { it.value }.sortedByDescending { it.time }.map { tx ->
+                TransactionListItemDto(
+                    tx.id,
+                    tx.direction,
+                    tx.amount,
+                    tx.primaryText,
+                    tx.secondaryText,
+                    tx.time,
+                    tx.walletLayer,
+                    tx.confirmed
+                )
+            }
+        }
+
+        return combine(blockchainTransactions, lightningTransactions, cashuTransactions, rgbTransactions) { b, l, c, r -> b + l + c + r }
     }
 
 

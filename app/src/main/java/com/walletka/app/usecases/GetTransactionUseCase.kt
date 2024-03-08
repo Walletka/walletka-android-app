@@ -4,6 +4,8 @@ import android.util.Log
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
+import arrow.core.flatMap
+import arrow.core.flatten
 import com.walletka.app.dto.Amount
 import com.walletka.app.dto.TransactionDetailDto
 import com.walletka.app.enums.TransactionDirection
@@ -11,7 +13,9 @@ import com.walletka.app.enums.WalletLayer
 import com.walletka.app.io.repository.LdkRepository
 import com.walletka.app.wallet.BlockchainWallet
 import com.walletka.app.wallet.CashuWallet
+import com.walletka.app.wallet.RgbWallet
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDateTime
@@ -22,7 +26,8 @@ import javax.inject.Inject
 class GetTransactionUseCase @Inject constructor(
     private val blockchainWallet: BlockchainWallet,
     private val ldkRepository: LdkRepository,
-    private val cashuWallet: CashuWallet
+    private val cashuWallet: CashuWallet,
+    private val rgbWallet: RgbWallet
 ) {
 
     suspend operator fun invoke(params: GetTransactionParams): Option<TransactionDetailDto> = withContext(Dispatchers.IO) {
@@ -108,6 +113,12 @@ class GetTransactionUseCase @Inject constructor(
                 return@withContext None
             }
 
+            WalletLayer.RGB -> {
+                rgbWallet.rgbAssets.value.values.flatten().firstOrNull { it.id == params.txId }?.let {
+                    return@withContext Some(it)
+                }
+                return@withContext None
+            }
             WalletLayer.All -> TODO()
         }
     }

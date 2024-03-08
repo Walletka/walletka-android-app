@@ -20,7 +20,7 @@ class CloseLightningChannelUseCase @Inject constructor(
             ?: return@withContext WalletkaError.CantCloseLightningChannel().left()
 
         try {
-            lightningWallet.closeChannel(channelId, channel.counterpartyNodeId)
+            lightningWallet.closeChannel(channel.channelId, channel.counterpartyNodeId)
             return@withContext Unit.right()
         } catch (e: Exception) {
             Log.e("CloseLightningChannelUC", e.localizedMessage)
