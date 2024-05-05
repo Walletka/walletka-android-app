@@ -81,6 +81,15 @@ class BlockchainWallet @Inject constructor(
                     false
                 )
             )
+            //BlockchainConfig.Esplora(
+            //    EsploraConfig(
+            //        appState.esploraFullUrl,
+            //        null,
+            //        null,
+            //        100u,
+            //        5u
+            //    )
+            //)
         )
     }
 
@@ -115,6 +124,8 @@ class BlockchainWallet @Inject constructor(
         _transactions.value = getTransactions()
         _utxos.value = listUnspent()
         refreshDataLoop()
+        val xpub = keys.asPublic()
+        Log.i(TAG, xpub.asString())
     }
 
     private fun getWallet(keys: DescriptorSecretKey): Wallet {

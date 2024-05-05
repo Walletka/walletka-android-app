@@ -130,6 +130,10 @@ class PayInvoiceViewModel @Inject constructor(
                         nostrMetadata = getNostrMetadataUseCase(destination).orNull()
                     }
                 }
+
+                DestinationType.Rootstock -> {
+                    // Todo
+                }
             }
         }
 
@@ -233,6 +237,7 @@ class PayInvoiceViewModel @Inject constructor(
             }
 
             DestinationType.Unknown -> error = "Unknown destination"
+            DestinationType.Rootstock -> TODO()
         }
     }
 
@@ -257,6 +262,7 @@ class PayInvoiceViewModel @Inject constructor(
                 }
 
                 DestinationType.Unknown -> error = "Unknown destination"
+                DestinationType.Rootstock -> TODO()
             }
         }
         return false

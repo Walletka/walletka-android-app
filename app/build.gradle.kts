@@ -54,11 +54,15 @@ android {
 }
 
 dependencies {
+    // Rootstock
+    implementation("org.web3j:core:4.8.7-android")
+
+
     implementation("io.arrow-kt:arrow-core:1.0.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    implementation("org.rgbtools:rgb-lib-android:0.2.0")
+    implementation("org.rgbtools:rgb-lib-android:0.3.0-alpha.1")
     implementation("com.github.lelloman:android-identicons:v11")
 
     val roomVersion = "2.6.1"

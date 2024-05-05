@@ -4,7 +4,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.pow
 
-class Amount private constructor(private val amountMsat: ULong, val symbol: String, val decimals: UInt) {
+class Amount private constructor(val amountMsat: ULong, val symbol: String, val decimals: UInt) {
 
     private val SATS_IN_BTC = 10.0.pow(decimals.toDouble())
 

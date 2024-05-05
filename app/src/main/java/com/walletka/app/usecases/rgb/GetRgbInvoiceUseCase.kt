@@ -14,7 +14,7 @@ class GetRgbInvoiceUseCase @Inject constructor(
 
     suspend operator fun invoke(): Either<WalletkaError, String> {
         return try {
-            rgbWallet.getReceiveData(null, 60u * 60u * 24u).invoice.right()
+            rgbWallet.getReceiveData(null, 60u * 60u * 24u).recipientId.right()
         } catch (e: Exception) {
             Log.e("GetRgbInvoiceUC", e.localizedMessage)
             WalletkaError.CantCreateRgbInvoice().left()

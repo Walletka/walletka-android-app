@@ -6,6 +6,7 @@ import com.walletka.app.wallet.BlockchainWallet
 import com.walletka.app.wallet.CashuWallet
 import com.walletka.app.wallet.LightningWallet
 import com.walletka.app.wallet.RgbWallet
+import com.walletka.app.wallet.RootstockWallet
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -15,6 +16,7 @@ class StartWalletkaServicesUseCase @Inject constructor(
     private val lightningWallet: LightningWallet,
     private val rgbWallet: RgbWallet,
     private val cashuWallet: CashuWallet,
+    private val rootstockWallet: RootstockWallet,
 ) {
 
     private val TAG = "StartWalletkaUC"
@@ -30,6 +32,8 @@ class StartWalletkaServicesUseCase @Inject constructor(
         nostrClient.start()
         Log.i(TAG, "starting cashu wallet")
         cashuWallet.start()
+        Log.i(TAG, "Starting rootstock wallet")
+        rootstockWallet.start()
 
         Log.i(TAG, "Walletka services started")
     }

@@ -71,8 +71,13 @@ fun DashboardScreen(
         ) {
             DashboardHeader(
                 navController,
-                balance = viewModel.balances[viewModel.activeLayer] ?: WalletBalanceDto.CombinedWalletsBalance(Amount.fromSats(0u)),
-                viewModel.activeLayer,
+                balances =
+                listOf(
+                    viewModel.balances[viewModel.activeLayer] ?: WalletBalanceDto.CombinedWalletsBalance(
+                        Amount.fromSats(0u)),
+                    WalletBalanceDto.RootstockBalance(Amount.fromSats(100u, "USDT", 2u))
+                ),
+                    viewModel.activeLayer,
                 onLayerSelected = { layer ->
                     viewModel.activeLayer = layer
                 },

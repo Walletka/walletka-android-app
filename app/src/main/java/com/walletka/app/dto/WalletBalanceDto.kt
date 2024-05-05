@@ -19,5 +19,9 @@ sealed class WalletBalanceDto(val availableAmount: Amount) {
         val mints: Map<String, Amount>
     ) : WalletBalanceDto(Amount.fromMsat(mints.values.sumOf { it.msats() }))
 
+    data class RootstockBalance(
+        val amount: Amount
+    ): WalletBalanceDto(amount)
+
     data class CombinedWalletsBalance(val amount: Amount) : WalletBalanceDto(amount)
 }

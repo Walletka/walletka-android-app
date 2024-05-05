@@ -1,5 +1,6 @@
 package com.walletka.app.usecases
 
+import android.util.Log
 import android.webkit.URLUtil
 import com.walletka.app.dto.Amount
 import com.walletka.app.dto.QrCodeResultDto
@@ -47,15 +48,24 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
         }
 //rgb:~/~/utxob:R3Cdz9R-VLYgy3kHc-xnBHjDBGz-951RdnoBj-W5Nt8C1CM-LNxsSn?expiry=1708551767&endpoints=rpcs://proxy.iriswallet.com/0.2/json-rpc
 
-        if (input.startsWith("rgb:~")) {
-            val utxob = input.substring(0, input.indexOfFirst { it == '?' }).removePrefix("rgb:~/~/utxob:")
+        if (input.startsWith("rgb:~") || input.startsWith("bcrt:utxob:")) {
+            val utxob =
+                if (input.startsWith("rgb:~"))
+                    input.substring(0, input.indexOfFirst { it == '?' })
+                        .removePrefix("rgb:~/~/utxob:")
+                else input
+
             val parameters = input.split('&').map {
                 val parts = it.split('=')
                 val name = parts.firstOrNull() ?: ""
                 val value = parts.drop(1).firstOrNull() ?: ""
                 Pair(name, value)
             }.associate { Pair(it.first, it.second) }
-            return QrCodeResultDto.RgbInvoice(utxob, parameters["expiry"]?.toULong() ?: 0u, parameters["endpoints"] ?: "")
+            return QrCodeResultDto.RgbInvoice(
+                utxob,
+                parameters["expiry"]?.toULong() ?: 0u,
+                parameters["endpoints"] ?: ""
+            )
         }
 
         try {
@@ -63,6 +73,10 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
             return QrCodeResultDto.BitcoinAddress(input, Amount.zero)
         } catch (_: Exception) {
 
+        }
+
+        if (input.startsWith("0x")) {
+            return QrCodeResultDto.RootstockAddress(input)
         }
 
         return QrCodeResultDto.UnsupportedFormat(input)

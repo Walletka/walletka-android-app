@@ -6,6 +6,7 @@ import com.walletka.app.enums.WalletLayer
 import com.walletka.app.wallet.BlockchainWallet
 import com.walletka.app.wallet.CashuWallet
 import com.walletka.app.wallet.LightningWallet
+import com.walletka.app.wallet.RootstockWallet
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -13,7 +14,8 @@ import javax.inject.Inject
 class GetBalancesUseCase @Inject constructor(
     private val blockchainWallet: BlockchainWallet,
     private val lightningWallet: LightningWallet,
-    private val cashuWallet: CashuWallet
+    private val cashuWallet: CashuWallet,
+    private val rootstockWallet: RootstockWallet,
 ) {
 
     suspend operator fun invoke(params: Params): kotlinx.coroutines.flow.Flow<Map<WalletLayer, WalletBalanceDto>> {
@@ -37,12 +39,30 @@ class GetBalancesUseCase @Inject constructor(
             WalletBalanceDto.LightningWalletBalance(Amount.fromMsat(it), Amount.fromSats(0u)) // Todo inbound
         }
 
-        return combine(blockchainWalletBalance, lightningBalance, cashuWalletBalance) { b, l, c ->
+        val rootStockBalance = rootstockWallet.balance.map {
+            WalletBalanceDto.RootstockBalance(Amount.fromSats(it.toULong()))
+        }
+
+        return combine(
+            blockchainWalletBalance,
+            lightningBalance,
+            cashuWalletBalance,
+            rootStockBalance
+        ) { b, l, c, r ->
             mapOf(
                 Pair(WalletLayer.Blockchain, b),
                 Pair(WalletLayer.Cashu, c),
                 Pair(WalletLayer.Lightning, l),
-                Pair(WalletLayer.All, WalletBalanceDto.CombinedWalletsBalance(b.availableAmount + l.availableAmount + c.availableAmount))
+                Pair(WalletLayer.Rootstock, r),
+                Pair(
+                    WalletLayer.All,
+                    WalletBalanceDto.CombinedWalletsBalance(
+                        b.availableAmount +
+                                l.availableAmount +
+                                c.availableAmount +
+                                r.availableAmount
+                    )
+                )
             )
         }
     }

@@ -1,6 +1,7 @@
 package com.walletka.app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.OptIn
@@ -23,6 +24,7 @@ import com.walletka.app.ui.pages.scanner.ScannerScreen
 import com.walletka.app.ui.pages.settings.SettingsScreen
 import com.walletka.app.ui.pages.transfers.ClaimCashuTokenPage
 import com.walletka.app.ui.pages.transfers.CreateInvoiceScreen
+import com.walletka.app.ui.pages.transfers.FakePayInvoicePage
 import com.walletka.app.ui.pages.transfers.PayInvoicePage
 import com.walletka.app.ui.pages.transfers.PayInvoiceResultPage
 import com.walletka.app.ui.pages.transfers.PaymentReceivedPage
@@ -60,7 +62,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         var startDestination = if (getIntroState() == IntroState.Done) "home" else "intro"
 
-        installSplashScreen()
+        //installSplashScreen()
 
         runBlocking {
             if (getIntroState() == IntroState.Done) {
@@ -68,7 +70,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
+        Log.i("Main", "Splash screen removed")
         setContent {
             WalletkaTheme {
                 // A surface container using the 'background' color from the theme
@@ -117,6 +119,16 @@ class MainActivity : ComponentActivity() {
                             val amount = it.arguments?.getString("amount")?.toULongOrNull()
 
                             PayInvoicePage(
+                                navController = navController,
+                                destination = destination,
+                                amount = amount
+                            )
+                        }
+                        composable("fakepay?destination={destination}&amount={amount}") {
+                            val destination = it.arguments?.getString("destination")
+                            val amount = it.arguments?.getString("amount")?.toULongOrNull()
+
+                            FakePayInvoicePage(
                                 navController = navController,
                                 destination = destination,
                                 amount = amount

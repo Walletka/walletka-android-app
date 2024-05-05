@@ -88,7 +88,7 @@ fun TransactionListItem(modifier: Modifier = Modifier, transaction: TransactionL
                             .border(1.dp, DividerDefaults.color, shape = RoundedCornerShape(6.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(6.dp))
                     ) {
-                        Text(text = transaction.walletLayer.name, modifier = Modifier.padding(6.dp))
+                        Text(text = transaction.walletLayer.name, modifier = Modifier.padding(6.dp), color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
             }

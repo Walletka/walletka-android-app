@@ -91,6 +91,10 @@ fun WalletLayerActions(
                 }
             }
 
+            WalletLayer.Rootstock -> {
+
+            }
+
             WalletLayer.All -> {
 
             }
