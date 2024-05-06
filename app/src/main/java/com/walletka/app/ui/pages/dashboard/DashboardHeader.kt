@@ -163,7 +163,7 @@ fun DashboardHeader(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) })
 
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                WalletLayer.entries.forEach { layer ->
+                WalletLayer.entries.filter { it != WalletLayer.Rootstock }.forEach { layer ->
                     DropdownMenuItem(text = { Text(layer.name) }, onClick = {
                         onLayerSelected(layer)
                         expanded = false

@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         var startDestination = if (getIntroState() == IntroState.Done) "home" else "intro"
 
-        //installSplashScreen()
+        installSplashScreen()
 
         runBlocking {
             if (getIntroState() == IntroState.Done) {

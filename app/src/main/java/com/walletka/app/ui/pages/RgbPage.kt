@@ -73,7 +73,9 @@ class RgbPageViewModel @Inject constructor(
     var error: String? by mutableStateOf(null)
 
     init {
-        assets = getRgbAssetsUseCase()
+        viewModelScope.launch {
+            assets = getRgbAssetsUseCase()
+        }
     }
 
     fun refreshAssets() {

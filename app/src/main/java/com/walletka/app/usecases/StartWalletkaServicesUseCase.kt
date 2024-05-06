@@ -33,7 +33,7 @@ class StartWalletkaServicesUseCase @Inject constructor(
         Log.i(TAG, "starting cashu wallet")
         cashuWallet.start()
         Log.i(TAG, "Starting rootstock wallet")
-        rootstockWallet.start()
+        //rootstockWallet.start()
 
         Log.i(TAG, "Walletka services started")
     }

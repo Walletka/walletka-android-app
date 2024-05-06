@@ -42,7 +42,7 @@ class CashuWallet @Inject constructor(
     val transactionsFlow = cashuRepository.transactions
 
     fun start() {
-        launch {
+        launch(Dispatchers.IO) {
             getUnreadMessagesFromNostr()
             nostrSubscribe()
         }

@@ -1,15 +1,20 @@
 package com.walletka.app.ui.pages.intro.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -30,14 +35,29 @@ fun WelcomeScreen(onStepCompleted: () -> Unit) {
             top.linkTo(parent.top)
             bottom.linkTo(nextButton.top)
         }) {
-            Text(
-                stringResource(R.string.app_name), fontSize = 60.sp, fontWeight = FontWeight.ExtraBold, style = TextStyle(
-                    brush = Brush.linearGradient(
-                        colors = sampleGradientColors,
-                        tileMode = TileMode.Mirror
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.mipmap.invebit_logo),
+                    contentDescription = "logo",
+                    modifier = Modifier.height(60.dp)
+                )
+                Text(
+                    stringResource(R.string.app_name),
+                    fontSize = 60.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    style = TextStyle(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.onSurface,
+                                MaterialTheme.colorScheme.onSurface,
+                                ),
+                            tileMode = TileMode.Mirror
+                        )
                     )
                 )
-            )
+            }
             Text("Welcome!")
         }
 

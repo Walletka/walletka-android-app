@@ -85,7 +85,7 @@ class RgbWallet @Inject constructor(
     private val coloredWallet: Wallet by lazy {
         Log.i(TAG, "Loading RGB wallet")
         val mnemonic = mnemonicSeedProvider.get()!!
-        val xpub = restoreKeys(appState.bitcoinNetwork.toRgbNetwork(), mnemonic).xpub
+        val xpub = restoreKeys(appState.bitcoinNetwork.toRgbNetwork(), mnemonic).accountXpub
         val dataDir = getDataDir(xpub)
 
         if (!getRgbDataDir().exists()) {
@@ -97,21 +97,24 @@ class RgbWallet @Inject constructor(
         }
 
         try {
-            val keys = restoreKeys(appState.bitcoinNetwork.toRgbNetwork(), mnemonic).accountXpub
 
             val data = WalletData(
                 dataDir.absolutePath,
                 appState.bitcoinNetwork.toRgbNetwork(),
                 DatabaseType.SQLITE,
                 10u,
-                keys,
+                xpub,
                 mnemonic,
                 derivationAccountVanilla.toUByte(),
             )
 
-            Wallet(
+            val wallet = Wallet(
                 data
             )
+
+            Log.i(TAG, "Wallet loaded")
+
+            return@lazy wallet
         } catch (e: Exception) {
             Log.e(TAG, "Error while loading rgb wallet. Recovering RGB data from backup!")
             walletLoadError = e.localizedMessage
@@ -131,9 +134,13 @@ class RgbWallet @Inject constructor(
                     derivationAccountVanilla.toUByte(),
                 )
 
-                Wallet(
+                val wallet = Wallet(
                     data
                 )
+
+                Log.i(TAG, "Wallet loaded")
+
+                return@lazy wallet
             } catch (e: Exception) {
                 Log.i(TAG, "Restore wallet failed")
                 throw e
@@ -143,17 +150,18 @@ class RgbWallet @Inject constructor(
 
     fun start() {
         launch(Dispatchers.IO) {
-            goOnline()
             if (!getBackupPath().exists()) {
                 getBackupPath().mkdir()
             }
-
+            Log.i(TAG, "RGB wallet started")
             refreshDataLoop()
         }
     }
 
     private fun refreshDataLoop() = launch { // launching the coroutine
         Log.d(TAG, "Starting refreshing data, interval: $REFRESH_INTERVAL_MILLIS")
+        updateRGBAssets(firstAppRefresh = true)
+
         _rgbAssets.value = listAssets().associateWith { listTransfers(it) }
         _rgbUtxos.value = listUnspent(rgbAssets.value.keys.associate { Pair(it.id, it.name) })
         while (true) {
@@ -262,7 +270,11 @@ class RgbWallet @Inject constructor(
     }
 
     private fun goOnline(): Online {
-        return coloredWallet.goOnline(true, appState.electrumUrl)
+        Log.i(TAG, "RGB wallet is getting online")
+        online =  coloredWallet.goOnline(true, appState.electrumUrl)
+        Log.i(TAG, "RGB wallet is online")
+
+        return online
     }
 
     suspend fun goOnlineAgain() = withContext(Dispatchers.IO) {
@@ -301,14 +313,14 @@ class RgbWallet @Inject constructor(
         )
     }
 
-    fun listAssets(): List<RgbAssetDto> {
+    suspend fun listAssets(): List<RgbAssetDto> = withContext(Dispatchers.IO) {
         //return listOf()
         val assets = coloredWallet.listAssets(listOf())
         val assetsRgb20 = assets.nia!!.sortedBy { assetNia -> assetNia.addedAt }
         Log.d(TAG, "RGB 20 assets: $assetsRgb20")
         val assetsRgb25 = assets.cfa!!.sortedBy { assetCfa -> assetCfa.addedAt }
         Log.d(TAG, "RGB 25 assets: $assetsRgb25")
-        return assetsRgb20.map { RgbAssetDto(it) } + assetsRgb25.map { RgbAssetDto(it) }
+        return@withContext assetsRgb20.map { RgbAssetDto(it) } + assetsRgb25.map { RgbAssetDto(it) }
     }
 
     fun listTransactions(sync: Boolean): List<Transaction> {

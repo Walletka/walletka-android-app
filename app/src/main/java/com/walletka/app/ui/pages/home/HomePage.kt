@@ -5,12 +5,15 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -33,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -107,15 +111,23 @@ fun HomePage(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(id = R.string.app_name),
-                        fontSize = 25.sp,
-                        //style = TextStyle(
-                        //    brush = Brush.linearGradient(
-                        //        colors = sampleGradientColors
-                        //    )
-                        //)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                        Image(
+                            painter = painterResource(id = R.mipmap.invebit_logo),
+                            contentDescription = "logo",
+                            modifier = Modifier.width(30.dp)
+                        )
+                        Text(
+                            text = stringResource(id = R.string.app_name),
+                            fontSize = 30.sp,
+                            //style = TextStyle(
+                            //    brush = Brush.linearGradient(
+                            //        colors = sampleGradientColors
+                            //    )
+                            //)
+                        )
+                    }
                 },
                 actions = {
                     IconButton(onClick = { navController.navigate("settings") }) {
@@ -146,7 +158,12 @@ fun HomePage(
                         }
                         showBottomSheet = false
                     },
-                    leadingContent = { Icon(painterResource(id = R.drawable.baseline_content_paste_24), "Paste from clipboard") },
+                    leadingContent = {
+                        Icon(
+                            painterResource(id = R.drawable.baseline_content_paste_24),
+                            "Paste from clipboard"
+                        )
+                    },
                     headlineContent = { Text(text = "From clipboard") },
                 )
                 ListItem(
@@ -154,7 +171,12 @@ fun HomePage(
                         navController.navigate("pay")
                         showBottomSheet = false
                     },
-                    leadingContent = { Icon(painterResource(id = R.drawable.baseline_keyboard_24), "Manual input") },
+                    leadingContent = {
+                        Icon(
+                            painterResource(id = R.drawable.baseline_keyboard_24),
+                            "Manual input"
+                        )
+                    },
                     headlineContent = { Text(text = "Manual input") },
                 )
                 Spacer(modifier = Modifier.height(20.dp))

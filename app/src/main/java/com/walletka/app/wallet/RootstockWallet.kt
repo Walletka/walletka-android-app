@@ -47,7 +47,7 @@ class RootstockWallet @Inject constructor(
     val balance = _balance.asStateFlow()
 
     suspend fun start() {
-        refreshDataLoop()
+        //refreshDataLoop()
     }
 
     private fun refreshDataLoop() = launch(Dispatchers.IO) { // launching the coroutine
