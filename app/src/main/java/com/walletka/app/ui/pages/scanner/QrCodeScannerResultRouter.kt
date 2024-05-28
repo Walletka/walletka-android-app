@@ -52,6 +52,10 @@ fun getQrCodeResultRoute(result: QrCodeResultDto): String? {
             Log.i("QrCodeScanner", "Found RGB invoice ${result.utxob}")
             return "sendRgbAsset?utxob=${result.utxob}"
         }
+        is QrCodeResultDto.RootstockAddress -> {
+            Log.i("QrCodeScanner", "Found Rootstock address ${result.address}")
+            return "fakepay?destination=${result.address}"
+        }
     }
     return null
 }

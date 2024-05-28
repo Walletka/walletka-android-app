@@ -140,7 +140,7 @@ fun RgbAssetDetailPage(
                             Text(text = "${metadata.issuedSupply} ${asset.ticker ?: ""}")
                             Text(text = "Precision", fontWeight = FontWeight.Bold)
                             Text(text = metadata.precision.toString())
-                            metadata.description?.let {
+                            metadata.details?.let {
                                 Text(text = "Description", fontWeight = FontWeight.Bold)
                                 Text(text = it)
                             }

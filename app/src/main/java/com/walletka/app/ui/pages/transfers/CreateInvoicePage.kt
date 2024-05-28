@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -73,6 +74,7 @@ import com.walletka.app.usecases.blockchain.GetBlockchainAddressUseCase
 import com.walletka.app.usecases.lightning.GetBolt11InvoiceUseCase
 import com.walletka.app.usecases.lsp.GetMyLnUrlUseCase
 import com.walletka.app.usecases.rgb.GetRgbInvoiceUseCase
+import com.walletka.app.usecases.rootstock.GetRootstockAddressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -92,7 +94,7 @@ fun CreateInvoiceScreen(
 ) {
     val scope = rememberCoroutineScope()
 
-    val tabs = listOf("LnUrl", "Lightning", "RGB", "Blockchain")
+    val tabs = listOf("LnUrl", "Lightning", "Rootstock", "RGB", "Blockchain")
     val pageState = rememberPagerState {
         tabs.size
     }
@@ -123,7 +125,7 @@ fun CreateInvoiceScreen(
                 .verticalScroll(rememberScrollState())
                 .fillMaxHeight()
         ) {
-            TabRow(
+            ScrollableTabRow(
                 selectedTabIndex = pageState.currentPage,
             ) {
                 tabs.forEachIndexed { index, title ->
@@ -142,8 +144,9 @@ fun CreateInvoiceScreen(
                     when (tabIndex) {
                         0 -> InvoiceView(invoice = lnUrl ?: "")
                         1 -> InvoiceView(invoice = viewModel.bolt11Invoice)
-                        2 -> InvoiceView(invoice = viewModel.rgbInvoice)
-                        3 -> InvoiceView(invoice = viewModel.blockchainAddress)
+                        2 -> InvoiceView(invoice = viewModel.rootstockAddress)
+                        3 -> InvoiceView(invoice = viewModel.rgbInvoice)
+                        4 -> InvoiceView(invoice = viewModel.blockchainAddress)
                     }
                 }
             }
@@ -156,8 +159,9 @@ fun CreateInvoiceScreen(
                                 when (pageState.currentPage) {
                                     0 -> lnUrl ?: "Error getting lnurl"
                                     1 -> viewModel.bolt11Invoice
-                                    2 -> viewModel.rgbInvoice
-                                    3 -> viewModel.blockchainAddress
+                                    2 -> viewModel.rootstockAddress
+                                    3 -> viewModel.rgbInvoice
+                                    4 -> viewModel.blockchainAddress
                                     else -> "Undefined"
                                 }
                             )
@@ -181,8 +185,9 @@ fun CreateInvoiceScreen(
                                 Intent.EXTRA_TEXT, when (pageState.currentPage) {
                                     0 -> lnUrl
                                     1 -> viewModel.bolt11Invoice
-                                    2 -> viewModel.rgbInvoice
-                                    3 -> viewModel.blockchainAddress
+                                    2 -> viewModel.rootstockAddress
+                                    3 -> viewModel.rgbInvoice
+                                    4 -> viewModel.blockchainAddress
                                     else -> "Undefined"
                                 }
                             )
@@ -287,7 +292,8 @@ class CreateInvoiceViewModel @Inject constructor(
     private val getMyLnUrl: GetMyLnUrlUseCase,
     private val getBlockchainAddress: GetBlockchainAddressUseCase,
     private val getBolt11Invoice: GetBolt11InvoiceUseCase,
-    private val getRgbInvoice: GetRgbInvoiceUseCase
+    private val getRgbInvoice: GetRgbInvoiceUseCase,
+    private val getRootstockAddress: GetRootstockAddressUseCase
 ) : ViewModel() {
 
     private var _amountSat = MutableStateFlow("")
@@ -307,10 +313,19 @@ class CreateInvoiceViewModel @Inject constructor(
     var blockchainAddress by mutableStateOf("Unknown")
     var bolt11Invoice by mutableStateOf("Unknown")
     var rgbInvoice by mutableStateOf("unknown")
+    var rootstockAddress by mutableStateOf("unknown")
 
     init {
         viewModelScope.launch {
             blockchainAddress = getBlockchainAddress().getOrElse { "Unknown" }
+            getRootstockAddress().fold(
+                {
+                    rootstockAddress = "Error"
+                },
+                {
+                    rootstockAddress = it
+                }
+            )
             getRgbInvoice().fold(
                 {
                     rgbInvoice = "Error"

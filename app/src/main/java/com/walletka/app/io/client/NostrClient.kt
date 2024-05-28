@@ -68,7 +68,7 @@ class NostrClient @Inject constructor(
 
 
     suspend fun start() = withContext(Dispatchers.IO) {
-        client.addRelay("wss://nostr.tchaicap.space")
+        //client.addRelay("wss://nostr.tchaicap.space")
         client.addRelay("wss://nostr.oxtr.dev")
 
         client.connect()

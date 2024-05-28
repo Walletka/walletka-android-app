@@ -8,7 +8,7 @@ class GetRgbAssetsUseCase @Inject constructor(
     private val rgbWallet: RgbWallet
 ) {
 
-    operator fun invoke(includeTransfer: Boolean = false): List<RgbAssetDto> {
+    suspend operator fun invoke(includeTransfer: Boolean = false): List<RgbAssetDto> {
         val assets = rgbWallet.listAssets()
 
         if (includeTransfer) {

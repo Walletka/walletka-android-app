@@ -119,6 +119,12 @@ class GetTransactionUseCase @Inject constructor(
                 }
                 return@withContext None
             }
+
+            WalletLayer.Rootstock -> {
+                // Todo
+                return@withContext None
+            }
+
             WalletLayer.All -> TODO()
         }
     }

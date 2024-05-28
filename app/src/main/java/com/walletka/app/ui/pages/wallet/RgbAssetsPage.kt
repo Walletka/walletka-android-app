@@ -20,11 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.walletka.app.dto.RgbAssetDto
 import com.walletka.app.ui.components.RgbAssetList
 import com.walletka.app.usecases.rgb.GetRgbAssetsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +73,9 @@ class RgbAssetsPageViewModel @Inject constructor(
     var assets by mutableStateOf(listOf<RgbAssetDto>())
 
     init {
-        assets = getRgbAssets(false)
+        viewModelScope.launch {
+            assets = getRgbAssets(false)
+        }
     }
 
 }

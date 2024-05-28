@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.walletka.app"
-        minSdk = 26
+        minSdk = 33
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -54,11 +54,15 @@ android {
 }
 
 dependencies {
+    // Rootstock
+    implementation("org.web3j:core:4.8.7-android")
+
+
     implementation("io.arrow-kt:arrow-core:1.0.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    implementation("org.rgbtools:rgb-lib-android:0.2.0")
+    implementation("org.rgbtools:rgb-lib-android:0.3.0-alpha.1")
     implementation("com.github.lelloman:android-identicons:v11")
 
     val roomVersion = "2.6.1"
@@ -82,6 +86,7 @@ dependencies {
     implementation(files("./libs/ldk-node.aar"))
     implementation(files("./libs/cashusdk-debug.aar"))
     implementation(files("./libs/bdk-android.aar"))
+    implementation(files("./libs/android-debug.aar"))
     implementation("net.java.dev.jna:jna:5.13.0@aar")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")

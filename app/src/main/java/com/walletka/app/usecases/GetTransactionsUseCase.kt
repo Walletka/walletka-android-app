@@ -10,6 +10,7 @@ import com.walletka.app.wallet.BlockchainWallet
 import com.walletka.app.wallet.CashuWallet
 import com.walletka.app.wallet.LightningWallet
 import com.walletka.app.wallet.RgbWallet
+import com.walletka.app.wallet.RootstockWallet
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import org.rgbtools.TransferKind
@@ -23,7 +24,8 @@ class GetTransactionsUseCase @Inject constructor(
     private val blockchainWallet: BlockchainWallet,
     private val lightningWallet: LightningWallet,
     private val cashuWallet: CashuWallet,
-    private val rgbWallet: RgbWallet
+    private val rgbWallet: RgbWallet,
+    private val rootstockWallet: RootstockWallet,
 ) {
 
     suspend operator fun invoke(params: Params): kotlinx.coroutines.flow.Flow<List<TransactionListItemDto>> {
@@ -103,7 +105,27 @@ class GetTransactionsUseCase @Inject constructor(
             }
         }
 
-        return combine(blockchainTransactions, lightningTransactions, cashuTransactions, rgbTransactions) { b, l, c, r -> b + l + c + r }
+        val rootstockTransactions = rootstockWallet.transactions.map {
+            it.map {tx ->
+                TransactionListItemDto(
+                    tx.hash,
+                    TransactionDirection.Received,
+                    Amount.fromSats(tx.value.toLong().toULong() / 1000000000u),
+                    "PText",
+                    "SText",
+                    LocalDateTime.now(),
+                    WalletLayer.Rootstock,
+                    true
+                )
+            }
+        }
+
+        return combine(
+            blockchainTransactions,
+            lightningTransactions,
+            cashuTransactions,
+            rgbTransactions,
+            rootstockTransactions) { b, l, c, r, r1 -> b + l + c + r + r1 }
     }
 
 

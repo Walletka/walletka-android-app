@@ -49,7 +49,7 @@ class RgbWallet @Inject constructor(
 
     private val REFRESH_INTERVAL_MILLIS = 30_000
 
-    val derivationChangeVanilla = 0 // Todo
+    val derivationChangeVanilla = 1 // Todo
     val derivationAccountVanilla = 0
     val defaultPrecision: UByte = 0U
 
@@ -85,7 +85,7 @@ class RgbWallet @Inject constructor(
     private val coloredWallet: Wallet by lazy {
         Log.i(TAG, "Loading RGB wallet")
         val mnemonic = mnemonicSeedProvider.get()!!
-        val xpub = restoreKeys(appState.bitcoinNetwork.toRgbNetwork(), mnemonic).xpub
+        val xpub = restoreKeys(appState.bitcoinNetwork.toRgbNetwork(), mnemonic).accountXpub
         val dataDir = getDataDir(xpub)
 
         if (!getRgbDataDir().exists()) {
@@ -97,17 +97,24 @@ class RgbWallet @Inject constructor(
         }
 
         try {
-            Wallet(
-                WalletData(
-                    dataDir.absolutePath,
-                    appState.bitcoinNetwork.toRgbNetwork(),
-                    DatabaseType.SQLITE,
-                    10u,
-                    restoreKeys(appState.bitcoinNetwork.toRgbNetwork(), mnemonic).xpub,
-                    mnemonic,
-                    derivationChangeVanilla.toUByte(),
-                )
+
+            val data = WalletData(
+                dataDir.absolutePath,
+                appState.bitcoinNetwork.toRgbNetwork(),
+                DatabaseType.SQLITE,
+                10u,
+                xpub,
+                mnemonic,
+                derivationAccountVanilla.toUByte(),
             )
+
+            val wallet = Wallet(
+                data
+            )
+
+            Log.i(TAG, "Wallet loaded")
+
+            return@lazy wallet
         } catch (e: Exception) {
             Log.e(TAG, "Error while loading rgb wallet. Recovering RGB data from backup!")
             walletLoadError = e.localizedMessage
@@ -115,17 +122,25 @@ class RgbWallet @Inject constructor(
             try {
                 //backupRestoreBlocking(getBackupFilePath(xpub), mnemonicSeedProvider.get()!!, getDataDir(xpub))
                 Log.i(TAG, "RGB wallet restored")
-                Wallet(
-                    WalletData(
-                        dataDir.absolutePath,
-                        appState.bitcoinNetwork.toRgbNetwork(),
-                        DatabaseType.SQLITE,
-                        10u,
-                        restoreKeys(appState.bitcoinNetwork.toRgbNetwork(), mnemonic).xpub,
-                        mnemonic,
-                        derivationChangeVanilla.toUByte(),
-                    )
+                val keys = restoreKeys(appState.bitcoinNetwork.toRgbNetwork(), mnemonic).accountXpub
+
+                val data = WalletData(
+                    dataDir.absolutePath,
+                    appState.bitcoinNetwork.toRgbNetwork(),
+                    DatabaseType.SQLITE,
+                    10u,
+                    keys,
+                    mnemonic,
+                    derivationAccountVanilla.toUByte(),
                 )
+
+                val wallet = Wallet(
+                    data
+                )
+
+                Log.i(TAG, "Wallet loaded")
+
+                return@lazy wallet
             } catch (e: Exception) {
                 Log.i(TAG, "Restore wallet failed")
                 throw e
@@ -138,13 +153,15 @@ class RgbWallet @Inject constructor(
             if (!getBackupPath().exists()) {
                 getBackupPath().mkdir()
             }
-
+            Log.i(TAG, "RGB wallet started")
             refreshDataLoop()
         }
     }
 
     private fun refreshDataLoop() = launch { // launching the coroutine
         Log.d(TAG, "Starting refreshing data, interval: $REFRESH_INTERVAL_MILLIS")
+        updateRGBAssets(firstAppRefresh = true)
+
         _rgbAssets.value = listAssets().associateWith { listTransfers(it) }
         _rgbUtxos.value = listUnspent(rgbAssets.value.keys.associate { Pair(it.id, it.name) })
         while (true) {
@@ -200,15 +217,16 @@ class RgbWallet @Inject constructor(
     }
 
     suspend fun deleteTransfer(transfer: String) = withContext(Dispatchers.IO) {
-        coloredWallet.deleteTransfers(transfer, null, false)
+        //coloredWallet.deleteTransfers(transfer, null, false)
     }
 
     suspend fun failAndDeleteOldTransfers(): Boolean = withContext(Dispatchers.IO) {
-        Log.i(TAG, "Failing old transfers")
-        var changed = coloredWallet.failTransfers(online, null, null, true)
-        Log.i(TAG, "Changed: $changed")
+        //Log.i(TAG, "Failing old transfers")
+        //var changed = coloredWallet.failTransfers(online, null, true)
+        //Log.i(TAG, "Changed: $changed")
+        var changed = false
         Log.i(TAG, "Deleting old transfers")
-        val deleted = coloredWallet.deleteTransfers(null, null, true)
+        val deleted = coloredWallet.deleteTransfers(null, true)
         Log.i(TAG, "Deleted: $changed")
         if (deleted) changed = true
         return@withContext changed
@@ -252,7 +270,11 @@ class RgbWallet @Inject constructor(
     }
 
     private fun goOnline(): Online {
-        return coloredWallet.goOnline(true, appState.electrumUrl)
+        Log.i(TAG, "RGB wallet is getting online")
+        online =  coloredWallet.goOnline(true, appState.electrumUrl)
+        Log.i(TAG, "RGB wallet is online")
+
+        return online
     }
 
     suspend fun goOnlineAgain() = withContext(Dispatchers.IO) {
@@ -291,13 +313,14 @@ class RgbWallet @Inject constructor(
         )
     }
 
-    fun listAssets(): List<RgbAssetDto> {
+    suspend fun listAssets(): List<RgbAssetDto> = withContext(Dispatchers.IO) {
+        //return listOf()
         val assets = coloredWallet.listAssets(listOf())
         val assetsRgb20 = assets.nia!!.sortedBy { assetNia -> assetNia.addedAt }
         Log.d(TAG, "RGB 20 assets: $assetsRgb20")
         val assetsRgb25 = assets.cfa!!.sortedBy { assetCfa -> assetCfa.addedAt }
         Log.d(TAG, "RGB 25 assets: $assetsRgb25")
-        return assetsRgb20.map { RgbAssetDto(it) } + assetsRgb25.map { RgbAssetDto(it) }
+        return@withContext assetsRgb20.map { RgbAssetDto(it) } + assetsRgb25.map { RgbAssetDto(it) }
     }
 
     fun listTransactions(sync: Boolean): List<Transaction> {
@@ -343,7 +366,8 @@ class RgbWallet @Inject constructor(
                     RefreshFilter(RefreshTransferStatus.WAITING_COUNTERPARTY, false)
                 )
             else listOf()
-        return@withContext coloredWallet.refresh(online, asset?.id, filter)
+        coloredWallet.refresh(online, asset?.id, filter)
+        return@withContext true
     }
 
     suspend fun send(
@@ -360,7 +384,7 @@ class RgbWallet @Inject constructor(
                 false,
                 feeRate,
                 1u,
-            )
+            ).txid
         } catch (e: RgbLibException.InvalidTransportEndpoints) {
             throw e
         }
