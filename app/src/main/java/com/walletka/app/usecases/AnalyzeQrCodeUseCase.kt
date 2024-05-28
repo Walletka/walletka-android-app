@@ -52,7 +52,7 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
             val utxob =
                 if (input.startsWith("rgb:~"))
                     input.substring(0, input.indexOfFirst { it == '?' })
-                        .removePrefix("rgb:~/~/utxob:")
+                        .removePrefix("rgb:~/~/")
                 else input
 
             val parameters = input.split('&').map {

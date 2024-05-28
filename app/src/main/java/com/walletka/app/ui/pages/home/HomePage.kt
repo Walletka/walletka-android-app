@@ -113,11 +113,6 @@ fun HomePage(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
 
-                        Image(
-                            painter = painterResource(id = R.mipmap.invebit_logo),
-                            contentDescription = "logo",
-                            modifier = Modifier.width(30.dp)
-                        )
                         Text(
                             text = stringResource(id = R.string.app_name),
                             fontSize = 30.sp,

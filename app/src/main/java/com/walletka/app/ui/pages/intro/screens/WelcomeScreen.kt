@@ -39,7 +39,7 @@ fun WelcomeScreen(onStepCompleted: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = R.mipmap.invebit_logo),
+                    painter = painterResource(id = R.mipmap.ic_launcher),
                     contentDescription = "logo",
                     modifier = Modifier.height(60.dp)
                 )

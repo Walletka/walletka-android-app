@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.walletka.app"
-        minSdk = 26
+        minSdk = 33
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -86,6 +86,7 @@ dependencies {
     implementation(files("./libs/ldk-node.aar"))
     implementation(files("./libs/cashusdk-debug.aar"))
     implementation(files("./libs/bdk-android.aar"))
+    implementation(files("./libs/android-debug.aar"))
     implementation("net.java.dev.jna:jna:5.13.0@aar")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")

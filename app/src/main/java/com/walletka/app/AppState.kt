@@ -19,6 +19,7 @@ class AppState @Inject constructor() {
     val bdkDataPath = ".bdk"
     val ldkDataPath = ".ldk"
     val rgbDataPath = ".rgb"
+    val walletkaCorePath = ".core"
     val ldkPort = 9735
 
     val lspBaseUrl = "https://lsp.tchaicash.space/api/lsp/"
