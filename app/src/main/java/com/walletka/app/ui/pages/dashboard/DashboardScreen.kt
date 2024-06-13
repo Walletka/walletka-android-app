@@ -32,6 +32,8 @@ import com.walletka.app.usecases.GetBalancesUseCase
 import com.walletka.app.usecases.GetConnectionStatusUseCase
 import com.walletka.app.usecases.GetTransactionsUseCase
 import com.walletka.app.usecases.WalletkaConnectionStatusDto
+import com.walletka.app.wallet.WalletkaCore
+import com.walletka.core.WalletkaBalance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -67,21 +69,21 @@ fun DashboardScreen(
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+
         ) {
             DashboardHeader(
                 navController,
                 balances =
-                listOf(
-                    viewModel.balances[viewModel.activeLayer] ?: WalletBalanceDto.CombinedWalletsBalance(
-                        Amount.fromSats(0u)),
-                    WalletBalanceDto.RootstockBalance(Amount.fromSats(100u, "USDT", 2u))
-                ),
+                viewModel.balances.confirmed,
                     viewModel.activeLayer,
                 onLayerSelected = { layer ->
                     viewModel.activeLayer = layer
                 },
-                connectionStatus = viewModel.connectionStatusDto.status()
+                connectionStatus = viewModel.connectionStatusDto.status(),
+                onConnectionClick = {
+                    viewModel.sync()
+                }
             )
             WalletLayerActions(navController = navController, layer = viewModel.activeLayer)
             Box() {
@@ -115,12 +117,13 @@ fun DashboardScreen(
 class DashboardViewModel @Inject constructor(
     private val getTransactions: GetTransactionsUseCase,
     private val getBalancesUseCase: GetBalancesUseCase,
-    private val getConnectionStatus: GetConnectionStatusUseCase
+    private val getConnectionStatus: GetConnectionStatusUseCase,
+    private val walletkaCore: WalletkaCore
 ) : ViewModel() {
 
     val transactions = mutableStateListOf<TransactionListItemDto>()
     var activeLayer by mutableStateOf(WalletLayer.All)
-    var balances by mutableStateOf<Map<WalletLayer, WalletBalanceDto>>(mapOf())
+    var balances by mutableStateOf(WalletkaBalance(listOf(), listOf(), listOf()))
     var connectionStatusDto by mutableStateOf<WalletkaConnectionStatusDto>(
         WalletkaConnectionStatusDto(
             internetConnected = false,
@@ -148,6 +151,12 @@ class DashboardViewModel @Inject constructor(
             getConnectionStatus().collect {
                 connectionStatusDto = it
             }
+        }
+    }
+
+    fun sync() {
+        viewModelScope.launch(Dispatchers.IO) {
+            walletkaCore.sync(true, true)
         }
     }
 }

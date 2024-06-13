@@ -26,11 +26,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.walletka.app.ui.components.UtxoList
 import com.walletka.app.usecases.blockchain.GetUtxoListUseCase
+import com.walletka.core.WalletkaAsset
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import org.bitcoindevkit.LocalUtxo
 import javax.inject.Inject
 
 
@@ -59,7 +58,7 @@ fun BlockchainUtxosPage(navController: NavController, viewModel: BlockchainUtxos
                 .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
-            UtxoList(utxos = viewModel.utxoList)
+        // todo
         }
     }
 }
@@ -69,7 +68,7 @@ class BlockchainUtxosViewModel @Inject constructor(
     private val getUtxoList: GetUtxoListUseCase
 ) : ViewModel() {
 
-    var utxoList by mutableStateOf<List<LocalUtxo>>(listOf())
+    var utxoList by mutableStateOf<List<WalletkaAsset>>(listOf())
 
     init {
         viewModelScope.launch {

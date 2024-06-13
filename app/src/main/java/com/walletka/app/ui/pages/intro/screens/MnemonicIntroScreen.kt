@@ -24,10 +24,10 @@ import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.walletka.app.usecases.GetMnemonicSeedUseCase
 import com.walletka.app.usecases.StoreMnemonicSeedUseCase
+import com.walletka.core.generateMnemonic
+import com.walletka.core.validateMnemonic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import org.bitcoindevkit.Mnemonic
-import org.bitcoindevkit.WordCount
 import javax.inject.Inject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,7 +101,7 @@ class MnemonicIntroScreenViewModel @Inject constructor(
     }
 
     fun generateMnemonicSeed() {
-        mnemonicSeed = Mnemonic(WordCount.WORDS12).asString()
+        mnemonicSeed = generateMnemonic()
     }
 
     fun saveMnemonicSeed(onSuccess: () -> Unit) {
@@ -118,8 +118,7 @@ class MnemonicIntroScreenViewModel @Inject constructor(
 
     fun isMnemonicOk(): Boolean {
         return try {
-            Mnemonic.fromString(mnemonicSeed)
-            true
+            validateMnemonic(mnemonicSeed)
         } catch (_: Exception) {
             false
         }

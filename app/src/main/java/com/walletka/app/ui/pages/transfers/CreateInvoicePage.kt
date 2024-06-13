@@ -74,7 +74,6 @@ import com.walletka.app.usecases.blockchain.GetBlockchainAddressUseCase
 import com.walletka.app.usecases.lightning.GetBolt11InvoiceUseCase
 import com.walletka.app.usecases.lsp.GetMyLnUrlUseCase
 import com.walletka.app.usecases.rgb.GetRgbInvoiceUseCase
-import com.walletka.app.usecases.rootstock.GetRootstockAddressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -293,7 +292,6 @@ class CreateInvoiceViewModel @Inject constructor(
     private val getBlockchainAddress: GetBlockchainAddressUseCase,
     private val getBolt11Invoice: GetBolt11InvoiceUseCase,
     private val getRgbInvoice: GetRgbInvoiceUseCase,
-    private val getRootstockAddress: GetRootstockAddressUseCase
 ) : ViewModel() {
 
     private var _amountSat = MutableStateFlow("")
@@ -318,14 +316,7 @@ class CreateInvoiceViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             blockchainAddress = getBlockchainAddress().getOrElse { "Unknown" }
-            getRootstockAddress().fold(
-                {
-                    rootstockAddress = "Error"
-                },
-                {
-                    rootstockAddress = it
-                }
-            )
+
             getRgbInvoice().fold(
                 {
                     rgbInvoice = "Error"

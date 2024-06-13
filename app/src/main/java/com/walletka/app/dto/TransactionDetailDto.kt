@@ -2,7 +2,6 @@ package com.walletka.app.dto
 
 import com.walletka.app.enums.TransactionDirection
 import com.walletka.app.enums.WalletLayer
-import org.bitcoindevkit.TransactionDetails
 import java.time.LocalDateTime
 
 sealed class TransactionDetailDto {
@@ -26,7 +25,7 @@ sealed class TransactionDetailDto {
         override val walletLayer: WalletLayer,
         override val confirmed: Boolean,
         override val fee: Amount?,
-        val detail: TransactionDetails?
+        //val detail: TransactionDetails?
     ) : TransactionDetailDto()
 
     data class LightningTransactionDetailDto(

@@ -1,7 +1,7 @@
 package com.walletka.app.enums
 
 enum class WalletLayer {
-    Blockchain, Lightning, Cashu, RGB, Rootstock, All;
+    Blockchain, Lightning, Cashu, RGB, Rootstock, Core, All;
 
     companion object {
         fun byNameIgnoreCaseOrNull(input: String): WalletLayer? {

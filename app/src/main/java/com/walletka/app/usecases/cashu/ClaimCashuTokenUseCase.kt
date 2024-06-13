@@ -5,16 +5,16 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.walletka.app.errors.WalletkaError
-import com.walletka.app.wallet.CashuWallet
+import com.walletka.app.wallet.WalletkaCore
 import javax.inject.Inject
 
 class ClaimCashuTokenUseCase @Inject constructor(
-    private val cashuWallet: CashuWallet
+    private val walletkaCore: WalletkaCore
 ) {
 
     suspend operator fun invoke(token: String): Either<WalletkaError, Unit> {
         return try {
-            cashuWallet.claimToken(token)
+            // Todo
             Log.e("ClaimCashuTokenUC", "Token claimed successfully")
             Unit.right()
         } catch (e: Exception) {

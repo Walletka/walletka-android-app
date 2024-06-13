@@ -35,7 +35,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.tchaika.cashu_sdk.Token
 import com.walletka.app.R
 import com.walletka.app.enums.PayInvoiceResult
 import com.walletka.app.io.entity.CashuTokenEntity
@@ -143,10 +142,7 @@ class ClaimCashuTokenViewModel @Inject constructor(
         this.token = token
 
         try {
-            val decodedToken = Token.fromString(token)
-            amount = decodedToken.token().sumOf { it.proofs().sumOf { it.amount().toSat() } }
-            mintUrl = decodedToken.token().firstOrNull()?.url()
-            memo = decodedToken.memo()
+            throw NotImplementedError()
         } catch (e: Exception) {
             error = e.localizedMessage
         }

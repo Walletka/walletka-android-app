@@ -4,7 +4,6 @@ import android.util.Log
 import android.webkit.URLUtil
 import com.walletka.app.dto.Amount
 import com.walletka.app.dto.QrCodeResultDto
-import org.bitcoindevkit.Address
 import javax.inject.Inject
 
 class AnalyzeQrCodeUseCase @Inject constructor() {
@@ -69,7 +68,7 @@ class AnalyzeQrCodeUseCase @Inject constructor() {
         }
 
         try {
-            Address(input)
+            // Todo validate Address(input)
             return QrCodeResultDto.BitcoinAddress(input, Amount.zero)
         } catch (_: Exception) {
 

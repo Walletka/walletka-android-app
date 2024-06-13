@@ -6,10 +6,10 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import arrow.core.valid
+import com.walletka.core.generateMnemonic
+import com.walletka.core.validateMnemonic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.bitcoindevkit.Mnemonic
-import org.bitcoindevkit.WordCount
 import javax.inject.Inject
 
 class StoreMnemonicSeedUseCase @Inject constructor(
@@ -19,14 +19,14 @@ class StoreMnemonicSeedUseCase @Inject constructor(
         // TODO: Use android keystore
         params.mnemonicSeed?.let {
             try {
-                Mnemonic.fromString(it)
+                assert(validateMnemonic(it))
             } catch (e: Exception) {
                 return WalletkaError.InvalidMnemonicSeed(e.localizedMessage).left()
             }
         }
 
         withContext(Dispatchers.IO) {
-            val mnemonicSeed = params.mnemonicSeed ?: Mnemonic(WordCount.WORDS12).asString()
+            val mnemonicSeed = params.mnemonicSeed ?: generateMnemonic()
             sharedPreferences.edit().putString("mnemonic_seed", mnemonicSeed).apply()
         }
         return Unit.right()

@@ -173,29 +173,6 @@ fun BlockchainTransactionDetails(tx: TransactionDetailDto.BlockchainTransactionD
             .fillMaxWidth()
             .padding(top = 16.dp)
     ) {
-        tx.detail?.let { btx ->
-            Text(modifier = Modifier.padding(8.dp), text = "Inputs", style = MaterialTheme.typography.labelLarge)
-
-            btx.transaction?.let {
-                for (input in it.input) {
-                    TransactionDetailsInfoItem(title = "${input.previousOutput.txid}:${input.previousOutput.vout}", value = "?")
-                }
-            }
-
-            Icon(
-                painterResource(id = R.drawable.baseline_arrow_downward_24),
-                contentDescription = "Direction",
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-
-            Text(modifier = Modifier.padding(8.dp), text = "Outputs", style = MaterialTheme.typography.labelLarge)
-
-            btx.transaction?.let {
-                for (output in it.output) {
-                    TransactionDetailsInfoItem(title = shortAddress(output.address), value = "${output.value} sats")
-                }
-            }
-        }
     }
 }
 
@@ -298,7 +275,6 @@ fun PreviewTransactionDetailPage() {
             WalletLayer.Blockchain,
             true,
             Amount.fromSats(100u),
-            null
         )
 
         CommonTransactionDetails(

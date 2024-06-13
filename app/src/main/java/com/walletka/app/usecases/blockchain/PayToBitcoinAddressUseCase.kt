@@ -6,16 +6,16 @@ import arrow.core.left
 import arrow.core.right
 import com.walletka.app.dto.Amount
 import com.walletka.app.errors.WalletkaError
-import com.walletka.app.wallet.BlockchainWallet
+import com.walletka.app.wallet.WalletkaCore
 import javax.inject.Inject
 
 class PayToBitcoinAddressUseCase @Inject constructor(
-    private val blockchainWallet: BlockchainWallet
+    private val walletkaCore: WalletkaCore
 ) {
 
     suspend operator fun invoke(address: String, amount: Amount): Either<WalletkaError, Unit> {
         return try {
-            blockchainWallet.pay(mapOf(Pair(address, amount.sats())))
+            // Todo
             Unit.right()
         } catch (e: Exception) {
             Log.e("PayToAddressUC", e.localizedMessage)

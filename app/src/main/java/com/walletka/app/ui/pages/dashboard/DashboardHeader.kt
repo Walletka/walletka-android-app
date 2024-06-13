@@ -1,29 +1,10 @@
 package com.walletka.app.ui.pages.dashboard
 
-import android.util.Log
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.EaseInCubic
-import androidx.compose.animation.core.EaseInElastic
-import androidx.compose.animation.core.EaseInOut
-import androidx.compose.animation.core.EaseInOutBounce
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.with
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,13 +17,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedAssistChip
-import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,30 +32,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import arrow.core.left
-import com.walletka.app.dto.Amount
-import com.walletka.app.dto.WalletBalanceDto
 import com.walletka.app.enums.WalletLayer
 import com.walletka.app.enums.WalletkaConnectionStatus
 import com.walletka.app.ui.components.BalanceText
+import com.walletka.core.Amount
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DashboardHeader(
     navController: NavController,
-    balances: List<WalletBalanceDto>,
+    balances: List<Amount>,
     selectedLayer: WalletLayer,
     onLayerSelected: (WalletLayer) -> Unit,
     connectionStatus: WalletkaConnectionStatus,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onConnectionClick: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val pageState = rememberPagerState {
@@ -90,7 +61,7 @@ fun DashboardHeader(
 
         SuggestionChip(
             modifier = Modifier.padding(start = 4.dp),
-            onClick = { /*TODO*/ },
+            onClick = { onConnectionClick() },
             label = {
                 Text(connectionStatus.name)
             }
@@ -113,18 +84,13 @@ fun DashboardHeader(
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 10.dp, bottom = 10.dp)
                         .align(Alignment.CenterHorizontally),
-                    amount = balance.availableAmount,
+                    amount = com.walletka.app.dto.Amount.fromSats(
+                        balance.value,
+                        balance.currency.symbol,
+                        balance.currency.decimals.toUInt()
+                    ),
                     animate = true
                 )
-            }
-            if (balance is WalletBalanceDto.BlockchainWalletBalance) {
-                if (balance.untrustedPending.sats() > 0u) {
-                    Text(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally),
-                        text = "Pending: ${balance.untrustedPending.sats() + balance.trustedPending.sats()} sats"
-                    )
-                }
             }
         }
 

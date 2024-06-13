@@ -1,14 +1,11 @@
 package com.walletka.app.ui.pages
 
-import android.util.Log
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,11 +17,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.walletka.app.dto.RgbAssetDto
-import com.walletka.app.ui.components.RgbAssetList
-import com.walletka.app.usecases.rgb.GetRgbAssetsUseCase
-import com.walletka.app.wallet.RgbWallet
+import com.walletka.app.wallet.WalletkaCore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,9 +40,7 @@ fun RgbPage(navController: NavController, viewModel: RgbPageViewModel = hiltView
             Text(text = "Transfers: ${viewModel.transfersCount}")
             Text(text = "Utxos: ${viewModel.utxos}")
             Text(text = "RGB20 Assets")
-            RgbAssetList(assets = viewModel.assets) {
-                navController.navigate("rgbAsset/${it.id}")
-            }
+
             Button(onClick = { viewModel.createAsset() }) {
                 Text(text = "Create test asset")
             }
@@ -64,8 +56,7 @@ fun RgbPage(navController: NavController, viewModel: RgbPageViewModel = hiltView
 
 @HiltViewModel
 class RgbPageViewModel @Inject constructor(
-    private val rgbWallet: RgbWallet,
-    private val getRgbAssetsUseCase: GetRgbAssetsUseCase
+    private val walletkaCore: WalletkaCore
 ) : ViewModel() {
     var assets by mutableStateOf<List<RgbAssetDto>>(listOf())
     var transfersCount by mutableStateOf(0)
@@ -74,32 +65,20 @@ class RgbPageViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            assets = getRgbAssetsUseCase()
         }
     }
 
     fun refreshAssets() {
-        viewModelScope.launch(Dispatchers.IO) {
-            rgbWallet.updateRGBAssets()
 
-            assets = rgbWallet.listAssets()
-            transfersCount = rgbWallet.listTransactions(true).count()
-            val unspent = rgbWallet.listUnspent(mapOf())
-
-            utxos = unspent.count()
-        }
     }
 
     fun createAsset() {
         viewModelScope.launch {
-            rgbWallet.issueAssetRgb20("TST", "Test token", listOf(1000000u))
-            assets = rgbWallet.listAssets()
+            walletkaCore.issueRgb20Asset("TST", "Test", 6u, 10000000000u)
         }
     }
 
     fun setupRgbWallet() {
-        viewModelScope.launch {
-            rgbWallet.createUTXOs()
-        }
+
     }
 }

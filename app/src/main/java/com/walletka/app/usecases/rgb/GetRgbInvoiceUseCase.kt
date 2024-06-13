@@ -5,16 +5,17 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.walletka.app.errors.WalletkaError
-import com.walletka.app.wallet.RgbWallet
+import com.walletka.app.wallet.WalletkaCore
 import javax.inject.Inject
 
 class GetRgbInvoiceUseCase @Inject constructor(
-    private val rgbWallet: RgbWallet
+    private val walletkaCore: WalletkaCore
 ) {
 
     suspend operator fun invoke(): Either<WalletkaError, String> {
         return try {
-            rgbWallet.getReceiveData(null, 60u * 60u * 24u).recipientId.right()
+            // Todo
+            walletkaCore.getRgbInvoice(null, null).right()
         } catch (e: Exception) {
             Log.e("GetRgbInvoiceUC", e.localizedMessage)
             WalletkaError.CantCreateRgbInvoice().left()

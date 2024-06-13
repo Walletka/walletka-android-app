@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tchaika.cashu_sdk.Bolt11Invoice
 import com.walletka.app.dto.Amount
 import com.walletka.app.dto.ContactDetailDto
 import com.walletka.app.dto.ContactListItemDto
@@ -26,7 +25,6 @@ import com.walletka.app.usecases.contacts.GetNostrMetadataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.bitcoindevkit.Address
 import javax.inject.Inject
 
 @HiltViewModel
@@ -80,11 +78,12 @@ class PayInvoiceViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
-            getBalances(GetBalancesUseCase.Params()).collect {
-                balances = it
-            }
-        }
+        // todo
+        //viewModelScope.launch {
+        //    getBalances(GetBalancesUseCase.Params()).collect {
+        //        balances = it
+        //    }
+        //}
     }
 
     fun processInput(input: String?, amount: ULong? = null) {
@@ -98,13 +97,11 @@ class PayInvoiceViewModel @Inject constructor(
                 DestinationType.BitcoinAddress -> {}
                 DestinationType.LightningInvoice -> {
                     try {
-                        val bolt11Invoice = Bolt11Invoice(input)
-                        isAmountMutable =
-                            bolt11Invoice.amount() == null || bolt11Invoice.amount()?.toSat() == 0uL
+// todo decode invoice
+                        isAmountMutable = false
                         Log.i("PayVM", "Amount is mutable: $isAmountMutable")
 
-                        this.amountSat =
-                            bolt11Invoice.amount()?.toSat()?.toString() ?: amount?.toString() ?: "0"
+                        this.amountSat = "0"
 
                         Log.i("PayVM", "Bolt11 invoice amount: $amountSat sats")
 
@@ -156,7 +153,7 @@ class PayInvoiceViewModel @Inject constructor(
 
     private fun isBitcoinAddress(input: String): Boolean {
         return try {
-            Address(input)
+            // Todo validate Address(input)
             true
         } catch (_: Exception) {
             false

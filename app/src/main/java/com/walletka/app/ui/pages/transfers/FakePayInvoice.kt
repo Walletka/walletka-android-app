@@ -42,7 +42,6 @@ import com.walletka.app.ui.viewModels.PayInvoiceViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.bitcoindevkit.Address
 import javax.inject.Inject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -198,7 +197,7 @@ class FakePayInvoiceViewModel @Inject constructor() : ViewModel() {
 
     private fun isBitcoinAddress(input: String): Boolean {
         return try {
-            Address(input)
+            //Todo validate Address(input)
             true
         } catch (_: Exception) {
             false

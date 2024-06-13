@@ -37,10 +37,8 @@ import com.walletka.app.ui.pages.wallet.CashuNutsPage
 import com.walletka.app.ui.pages.wallet.LightningChannelDetailPage
 import com.walletka.app.ui.pages.wallet.LightningChannelsPage
 import com.walletka.app.ui.pages.wallet.OpenLightningChannelPage
-import com.walletka.app.ui.pages.wallet.RgbAssetDetailPage
-import com.walletka.app.ui.pages.wallet.RgbAssetsPage
-import com.walletka.app.ui.pages.wallet.RgbUtxosPage
 import com.walletka.app.ui.pages.wallet.WalletInfoPage
+import com.walletka.app.ui.pages.wallet.WalletkaAssetsPage
 import com.walletka.app.ui.theme.WalletkaTheme
 import com.walletka.app.usecases.StartWalletkaServicesUseCase
 import com.walletka.app.usecases.intro.GetIntroStateUseCase
@@ -186,16 +184,8 @@ class MainActivity : ComponentActivity() {
 
                             SendRgbAssetPage(navController = navController, utxob = utxob)
                         }
-                        composable("rgbAssets") {
-                            RgbAssetsPage(navController = navController)
-                        }
-                        composable("rgbAsset/{assetId}") {
-                            val assetId = it.arguments?.getString("assetId")!!
-
-                            RgbAssetDetailPage(navController = navController, assetId = assetId)
-                        }
-                        composable("rgbUtxoList") {
-                            RgbUtxosPage(navController = navController)
+                        composable("walletkaAssets") {
+                            WalletkaAssetsPage(navController = navController)
                         }
                     }
                 }

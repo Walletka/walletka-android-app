@@ -95,6 +95,12 @@ fun WalletLayerActions(
 
             }
 
+            WalletLayer.Core -> {
+                WalletLayerActionButton(text = "Assets", imageVector = Icons.Default.Menu) {
+                    navController.navigate("walletkaAssets")
+                }
+            }
+
             WalletLayer.All -> {
 
             }

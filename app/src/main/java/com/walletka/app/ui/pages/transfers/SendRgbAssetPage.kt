@@ -43,7 +43,6 @@ import com.walletka.app.dto.RgbAssetDto
 import com.walletka.app.enums.PayInvoiceResult
 import com.walletka.app.ui.AmountInputMask
 import com.walletka.app.ui.components.RgbAssetPicker
-import com.walletka.app.usecases.rgb.GetRgbAssetsUseCase
 import com.walletka.app.usecases.rgb.SendRgbAssetUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -176,7 +175,6 @@ fun SendRgbAssetPage(
 
 @HiltViewModel
 class SendRgbAssetPageViewModel @Inject constructor(
-    private val getRgbAssets: GetRgbAssetsUseCase,
     private val sendRgbAsset: SendRgbAssetUseCase
 ) : ViewModel() {
     var amount by mutableStateOf("")
@@ -190,9 +188,6 @@ class SendRgbAssetPageViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val rgbAssets = getRgbAssets()
-            assets = rgbAssets.associateBy { it.id }
-            selectedAsset = rgbAssets.firstOrNull()?.id
         }
     }
 
